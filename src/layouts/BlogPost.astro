@@ -16,7 +16,7 @@ const formatDate = (date: Date) =>
   });
 ---
 
-<Layout title={title}>
+<Layout title={title} description={description}>
   <article>
     <header>
       <h1>{title}</h1>
@@ -24,6 +24,20 @@ const formatDate = (date: Date) =>
       {description && <p class="description">{description}</p>}
     </header>
     <slot />
+
+    <!-- JSON-LD Structured Data for SEO -->
+    <script type="application/ld+json" is:inline set:html={JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "BlogPosting",
+      "headline": title,
+      "description": description,
+      "datePublished": publishDate.toISOString(),
+      "author": {
+        "@type": "Person",
+        "name": "nanobot"
+      },
+      "url": Astro.url.href
+    })} />
   </article>
 </Layout>
 

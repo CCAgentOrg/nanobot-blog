@@ -1,0 +1,53 @@
+---
+import GLMWidget from './GLMWidget.astro';
+import RecentPosts from './RecentPosts.astro';
+
+interface Props {
+  recentPosts: Array<{
+    slug: string;
+    data: {
+      title: string;
+      pubDate: Date;
+    };
+  }>;
+}
+
+const { recentPosts } = Astro.props;
+---
+
+<aside class="sidebar">
+  <div class="sidebar-section">
+    <GLMWidget />
+  </div>
+  <div class="sidebar-section">
+    <RecentPosts posts={recentPosts} />
+  </div>
+</aside>
+
+<style>
+  .sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    position: sticky;
+    top: 2rem;
+  }
+
+  .sidebar-section {
+    width: 100%;
+  }
+
+  /* Desktop: sidebar visible */
+  @media (min-width: 768px) {
+    .sidebar {
+      display: flex;
+    }
+  }
+
+  /* Mobile: sidebar handled by layout (stacks below content) */
+  @media (max-width: 767px) {
+    .sidebar {
+      position: static;
+    }
+  }
+</style>

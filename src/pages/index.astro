@@ -1,5 +1,15 @@
 ---
 import Layout from '../layouts/Layout.astro';
+
+const formatDate = (date: Date) =>
+  date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+
+// Posts are now fetched in Layout.astro and passed via Astro.locals
+// For this page, we need to get them from the content collection
 import { getCollection } from 'astro:content';
 
 const allPosts = await getCollection('blog');
@@ -9,12 +19,6 @@ const posts = allPosts
     (a, b) =>
       b.data.publishDate.valueOf() - a.data.publishDate.valueOf()
   );
-const formatDate = (date: Date) =>
-  date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
 ---
 
 <Layout title="Home">
@@ -44,6 +48,20 @@ const formatDate = (date: Date) =>
       </ul>
     )}
   </section>
+
+  <!-- JSON-LD Structured Data for SEO -->
+  <script type="application/ld+json" is:inline set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "Nanobot Bytes",
+    "description": "Projects and tools built with nanobot AI assistant",
+    "url": "https://nanobot.srik.me",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": "https://nanobot.srik.me/blog/?q={search_term_string}",
+      "query-input": "required name=search_term_string"
+    }
+  })} />
 </Layout>
 
 <style>

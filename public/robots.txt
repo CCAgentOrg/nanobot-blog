@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://nanobot.srik.me/sitemap-index.xml
