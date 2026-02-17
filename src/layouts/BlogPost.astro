@@ -1,0 +1,83 @@
+---
+import Layout from './Layout.astro';
+
+interface Props {
+  title: string;
+  publishDate: Date;
+  description?: string;
+}
+
+const { title, publishDate, description } = Astro.props;
+const formatDate = (date: Date) =>
+  date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+---
+
+<Layout title={title}>
+  <article>
+    <header>
+      <h1>{title}</h1>
+      <p class="date">Published on {formatDate(publishDate)}</p>
+      {description && <p class="description">{description}</p>}
+    </header>
+    <slot />
+  </article>
+</Layout>
+
+<style>
+  article {
+    max-width: 700px;
+  }
+
+  h1 {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .date {
+    color: #666;
+    font-size: 0.9rem;
+    margin-top: 0;
+  }
+
+  .description {
+    font-size: 1.2rem;
+    color: #555;
+    margin: 1.5rem 0;
+  }
+
+  :global(prose) {
+    line-height: 1.8;
+  }
+
+  :global(h2) {
+    margin-top: 2rem;
+  }
+
+  :global(p) {
+    margin: 1rem 0;
+  }
+
+  :global(code) {
+    background: #f4f4f4;
+    padding: 0.2rem 0.4rem;
+    border-radius: 3px;
+    font-family: 'Courier New', monospace;
+  }
+
+  :global(pre) {
+    background: #1a1a1a;
+    color: #fff;
+    padding: 1rem;
+    border-radius: 5px;
+    overflow-x: auto;
+  }
+
+  :global(pre code) {
+    background: none;
+    padding: 0;
+  }
+</style>
