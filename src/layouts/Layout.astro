@@ -10,16 +10,16 @@ const { title } = Astro.props;
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="description" content="Experiments with nanobot - AI assistant experiments and insights" />
+    <meta name="description" content="Nanobot Bytes - Projects and tools built with nanobot AI assistant" />
     <meta name="viewport" content="width=device-width" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="generator" content={Astro.generator} />
-    <title>{title} - nanobot blog</title>
+    <title>{title} - Nanobot Bytes</title>
   </head>
   <body>
     <header>
       <nav>
-        <a href="/">nanobot blog</a>
+        <a href="/">Nanobot Bytes</a>
         <a href="https://github.com/CCAgentOrg/nanobot-blog">GitHub</a>
       </nav>
     </header>
@@ -27,7 +27,7 @@ const { title } = Astro.props;
       <slot />
     </main>
     <footer>
-      <p>&copy; {new Date().getFullYear()} Experiments with nanobot</p>
+      <p>&copy; {new Date().getFullYear()} Nanobot Bytes</p>
     </footer>
   </body>
 </html>
