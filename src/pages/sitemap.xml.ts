@@ -1,6 +1,7 @@
 import { getCollection } from 'astro:content';
+import type { APIRoute } from 'astro';
 
-export async function GET(context) {
+export const GET: APIRoute = async (context) => {
   const posts = await getCollection('blog');
   const siteUrl = context.site?.toString() || 'https://nanobot.srik.me';
 
@@ -19,7 +20,7 @@ export async function GET(context) {
     },
     ...posts.map((post) => ({
       loc: `${siteUrl}/blog/${post.slug}/`,
-      lastmod: post.data.updatedDate || post.data.pubDate.toISOString(),
+      lastmod: post.data.publishDate.toISOString(),
       changefreq: 'monthly',
       priority: 0.8,
     })),
