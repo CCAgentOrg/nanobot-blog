@@ -6,7 +6,4 @@ import sitemap from '@astrojs/sitemap';
 export default defineConfig({
   site: 'https://nanobot.srik.me',
   integrations: [mdx(), sitemap()],
-  build: {
-    format: 'directory',
-  },
 });

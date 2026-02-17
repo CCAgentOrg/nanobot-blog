@@ -20,7 +20,7 @@ const { posts } = Astro.props;
     <ul class="recent-posts-list">
       {posts.map((post) => (
         <li class="recent-posts-item">
-          <a href={`/posts/${post.slug}/`} class="recent-posts-link">
+          <a href={`/blog/${post.slug}/`} class="recent-posts-link">
             <span class="post-title">{post.data.title}</span>
             <span class="post-date">
               {post.data.pubDate.toLocaleDateString('en-US', {
