@@ -9,7 +9,7 @@ const integrations = [mdx()];
 if (!isPR) {
   integrations.push(
     sitemap({
-      filter: (page) => page !== '/robots.txt',
+      filter: (page) => page && page !== '/robots.txt',
     })
   );
 }
