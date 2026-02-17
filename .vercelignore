@@ -1,0 +1,31 @@
+# Dependencies
+node_modules
+.pnp
+.pnp.js
+
+# Testing
+coverage
+
+# Production
+dist
+build
+
+# Misc
+.DS_Store
+*.pem
+*.log
+
+# Vercel
+.vercel
+.turbo
+
+# Environment
+.env
+.env*.local
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~

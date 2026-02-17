@@ -7,24 +7,24 @@ const { currentTitle } = Astro.props;
 ---
 
 <nav class="breadcrumbs" aria-label="Breadcrumb">
-  <ol class="breadcrumbs-list" itemScope itemType="https://schema.org/BreadcrumbList">
-    <li class="breadcrumb-item" itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem">
-      <a href="/" class="breadcrumb-link" itemProp="item">
-        <span itemProp="name">Home</span>
+  <ol class="breadcrumbs-list" itemscope itemtype="https://schema.org/BreadcrumbList">
+    <li class="breadcrumb-item" itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+      <a href="/" class="breadcrumb-link" itemprop="item">
+        <span itemprop="name">Home</span>
       </a>
-      <meta itemProp="position" content="1" />
+      <meta itemprop="position" content="1" />
     </li>
     <li class="breadcrumb-separator">›</li>
-    <li class="breadcrumb-item" itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem">
-      <a href="/blog" class="breadcrumb-link" itemProp="item">
-        <span itemProp="name">Blog</span>
+    <li class="breadcrumb-item" itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+      <a href="/blog" class="breadcrumb-link" itemprop="item">
+        <span itemprop="name">Blog</span>
       </a>
-      <meta itemProp="position" content="2" />
+      <meta itemprop="position" content="2" />
     </li>
     <li class="breadcrumb-separator">›</li>
-    <li class="breadcrumb-item breadcrumb-current" itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem">
-      <span itemProp="name">{currentTitle}</span>
-      <meta itemProp="position" content="3" />
+    <li class="breadcrumb-item breadcrumb-current" itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+      <span itemprop="name">{currentTitle}</span>
+      <meta itemprop="position" content="3" />
     </li>
   </ol>
 </nav>
