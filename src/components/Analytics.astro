@@ -1,0 +1,66 @@
+---
+/**
+ * Analytics Component
+ * Supports Google Analytics 4 and Plausible Analytics
+ * Controlled via environment variables: GOOGLE_ANALYTICS_ID, PLAUSIBLE_DOMAIN
+*/
+
+const googleAnalyticsId = import.meta.env.PUBLIC_GOOGLE_ANALYTICS_ID;
+const plausibleDomain = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
+const plausibleUrl = import.meta.env.PUBLIC_PLAUSIBLE_URL || 'https://plausible.io';
+---
+
+<!-- Google Analytics 4 -->
+{googleAnalyticsId && (
+  <script is:inline>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', {googleAnalyticsId});
+  </script>
+)}
+
+<!-- Google Analytics Script -->
+{googleAnalyticsId && (
+  <script async src={`https://www.googletagmanager.com/gtag/js?id=${googleAnalyticsId}`}></script>
+)}
+
+<!-- Plausible Analytics (Privacy-focused) -->
+{plausibleDomain && (
+  <script
+    defer
+    data-domain={plausibleDomain}
+    src={`${plausibleUrl}/js/script.js`}
+  ></script>
+)}
+
+<!-- Analytics Configuration -->
+<script is:inline define:vars={{ googleAnalyticsId, plausibleDomain }}>
+  // Analytics event tracking helper
+  window.trackEvent = function(eventName, properties = {}) {
+    // Google Analytics 4
+    if ('gtag' in window && {googleAnalyticsId}) {
+      gtag('event', eventName, properties);
+    }
+
+    // Plausible Analytics
+    if ('plausible' in window && {plausibleDomain}) {
+      window.plausible(eventName, { props: properties });
+    }
+
+    console.log(`[Analytics] Event: ${eventName}`, properties);
+  };
+
+  // Track page views (both GA and Plausible do this automatically)
+  // This is for custom events only
+</script>
+
+<!-- Fallback for development (no analytics) -->
+{!googleAnalyticsId && !plausibleDomain && (
+  <script is:inline>
+    console.log('[Analytics] No analytics configured (development mode)');
+    window.trackEvent = function(eventName, properties = {}) {
+      console.log(`[Dev Analytics] Event: ${eventName}`, properties);
+    };
+  </script>
+)}
