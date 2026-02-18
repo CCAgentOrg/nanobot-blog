@@ -3,6 +3,34 @@
  * Dark/light mode support with terminal aesthetics
  */
 
+/* ===== PERFORMANCE OPTIMIZATIONS ===== */
+
+/* Font display strategy - prevents FOUT (Flash of Unstyled Text) */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Fira Code';
+  font-display: swap;
+}
+
+/* Content Visibility Optimization - improves large list rendering */
+.tmux-list > li {
+  content-visibility: auto;
+  contain-intrinsic-size: 60px;
+}
+
+/* Reduce paint on scrolling */
+.mobile-drawer {
+  will-change: transform;
+}
+
+.mobile-drawer-overlay {
+  will-change: opacity;
+}
+
 /* ===== THEME VARIABLES ===== */
 
 :root {

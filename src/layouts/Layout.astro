@@ -4,6 +4,7 @@ import TmuxStatusBar from '../components/TmuxStatusBar.astro';
 import ThemeToggle from '../components/ThemeToggle.astro';
 import Sidebar from '../components/Sidebar.astro';
 import MobileDrawer from '../components/MobileDrawer.astro';
+import OptimizedHead from '../components/OptimizedHead.astro';
 
 interface Props {
   title: string;
@@ -33,34 +34,7 @@ const recentPosts = allPosts
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width" />
-    <meta name="description" content={description} />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="canonical" href={Astro.url} />
-    <meta name="generator" content={Astro.generator} />
-    <title>{title} - Nanobot Bytes</title>
-
-    <!-- Open Graph -->
-    <meta property="og:title" content={title} />
-    <meta property="og:description" content={description} />
-    <meta property="og:image" content={image} />
-    <meta property="og:url" content={Astro.url} />
-    <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="Nanobot Bytes" />
-
-    <!-- Twitter Card -->
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content={title} />
-    <meta name="twitter:description" content={description} />
-    <meta name="twitter:image" content={image} />
-
-    <!-- RSS Auto-Discovery -->
-    <link rel="alternate" type="application/rss+xml" title="Nanobot Bytes" href="/rss.xml" />
-
-    <!-- Preconnect for fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <OptimizedHead title={title} description={description} image={image} />
   </head>
   <body>
     <!-- Tmux Status Bar Header -->
