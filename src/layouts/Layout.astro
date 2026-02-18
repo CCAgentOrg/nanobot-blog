@@ -1,269 +1,69 @@
 ---
-import '../styles/theme-system.css';
-
-import Navbar from '../components/Navbar.astro';
-import Sidebar from '../components/Sidebar.astro';
+import '../styles/theme.css';
+import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
-import SkipToContent from '../components/SkipToContent.astro';
-import MobileDrawer from '../components/MobileDrawer.astro';
-import EasterEggs from '../components/EasterEggs.astro';
-import TerminalEasterEggs from '../components/TerminalEasterEggs.astro';
+import Promo from '../components/Promo.astro';
+import ThemeToggle from '../components/ThemeToggle.astro';
 
 interface Props {
-  title?: string;
-  description?: string;
-  image?: string;
-  canonicalURL?: string;
-  type?: 'website' | 'article';
-  showSidebar?: boolean;
+	title: string;
+	description?: string;
 }
 
-const {
-  title = 'Nanobot Bytes',
-  description = 'Experiments with nanobot AI assistant',
-  image = '/og-image.png',
-  canonicalURL = new URL(Astro.url.pathname, Astro.site).href,
-  type = 'website',
-  showSidebar = true,
-} = Astro.props;
-
-const ogImage = new URL(image, Astro.site).href;
-const siteName = 'Nanobot Bytes';
-const publishedDate = type === 'article' ? new Date().toISOString() : undefined;
-const modifiedDate = new Date().toISOString();
+const { title, description } = Astro.props;
 ---
 
 <!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="generator" content={Astro.generator} />
+<html lang="en" data-theme="light">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<title>{title} | Nanobot Blog</title>
+		<meta name="description" content={description || 'Experiments in AI and code with nanobot.'} />
+		<meta name="generator" content={Astro.generator} />
+	</head>
+	<body>
 
-    <!-- SEO -->
-    <link rel="canonical" href={canonicalURL} />
-    <meta name="description" content={description} />
-    <meta name="theme-color" content="#1e1e1e" />
-    <meta name="color-scheme" content="dark light" />
+    <Header />
 
-    <!-- Open Graph -->
-    <meta property="og:title" content={title} />
-    <meta property="og:description" content={description} />
-    <meta property="og:image" content={ogImage} />
-    <meta property="og:url" content={canonicalURL} />
-    <meta property="og:type" content={type} />
-    <meta property="og:site_name" content={siteName} />
+		<div class="page-container">
+			<main class="main-content">
+				<slot />
+			</main>
+			<aside class="sidebar">
+        <ThemeToggle />
+				<Promo />
+			</aside>
+		</div>
 
-    <!-- Twitter Card -->
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content={title} />
-    <meta name="twitter:description" content={description} />
-    <meta name="twitter:image" content={ogImage} />
+    <Footer />
 
-    <!-- RSS Auto-Discovery -->
-    <link rel="alternate" type="application/rss+xml" title={siteName} href="/rss.xml" />
+		<style is:global>
+			.page-container {
+				display: grid;
+				grid-template-columns: 1fr 280px;
+				gap: 2rem;
+				max-width: 1400px;
+				margin: 2rem auto;
+				padding: 0 2rem;
+			}
 
-    <!-- JSON-LD: BlogPosting or WebSite -->
-    <script type="application/ld+json" is:inline set:html={JSON.stringify({
-      "@context": "https://schema.org",
-      "@type": type === 'article' ? "BlogPosting" : "WebSite",
-      "headline": title,
-      "description": description,
-      "image": ogImage,
-      "url": canonicalURL,
-      "name": type === 'article' ? title : siteName,
-      "author": {
-        "@type": "Organization",
-        "name": "Nanobot Bytes",
-        "url": "https://github.com/CCAgentOrg/nanobot-blog"
-      },
-      ...(type === 'article' && {
-        "datePublished": publishedDate,
-        "dateModified": modifiedDate,
-        "mainEntityOfPage": {
-          "@type": "WebPage",
-          "@id": canonicalURL
-        }
-      })
-    })} />
+			.sidebar {
+				position: sticky;
+				top: 2rem;
+				align-self: start;
+			}
 
-    <title>{title} | {siteName}</title>
-  </head>
+			@media (max-width: 1024px) {
+				.page-container {
+					grid-template-columns: 1fr;
+				}
 
-  <body>
-    <SkipToContent />
-
-    <!-- Mobile Drawer -->
-    <MobileDrawer />
-
-    <!-- Mobile Drawer -->
-    <slot name="drawer" />
-
-    <!-- Main Content -->
-    <main id="main-content" class={`layout ${showSidebar ? 'with-sidebar' : 'full-width'}`}>
-      <div class="content-wrapper">
-        <Navbar />
-        <div class="main-layout">
-          <div class="content-area">
-            <slot />
-          </div>
-          {showSidebar && <Sidebar />}
-        </div>
-        <Footer />
-      </div>
-    </main>
-
-    <!-- Easter Eggs -->
-    <EasterEggs />
-    <TerminalEasterEggs />
-
-    <!-- ASCII Art Footer (only on homepage) -->
-    {canonicalURL === 'https://nanobot.srik.me/' && (
-      <script is:inline>
-        (function() {
-          if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', addFooterASCII);
-          } else {
-            addFooterASCII();
-          }
-
-          function addFooterASCII() {
-            const footer = document.querySelector('footer');
-            if (footer) {
-              const ascii = document.createElement('pre');
-              ascii.className = 'footer-ascii';
-              ascii.textContent = `
-  ┌────────────────────────────────────────────┐
-  │  powered by nanobot • z.ai GLM 4.7         │
-  │  [session: nanobytes] [window: ${new Date().toISOString().slice(5, 10)}]     │
-  └────────────────────────────────────────────┘
-              `.trim();
-              footer.appendChild(ascii);
-            }
-          }
-        })();
-      </script>
-    )}
-
-    <!-- Analytics -->
-    <script is:inline>
-      (function() {
-        // Google Analytics
-        if ('GA_MEASUREMENT_ID' in window) {
-          window.dataLayer = window.dataLayer || [];
-          function gtag(){dataLayer.push(arguments);}
-          gtag('js', new Date());
-          gtag('config', window.GA_MEASUREMENT_ID);
-        }
-
-        // Plausible Analytics
-        if ('PLAUSIBLE_DOMAIN' in window) {
-          const script = document.createElement('script');
-          script.defer = true;
-          script.dataset.domain = window.PLAUSIBLE_DOMAIN;
-          script.src = 'https://plausible.io/js/script.js';
-          document.head.appendChild(script);
-        }
-
-        // Custom Event Tracking
-        if (window.trackEvent) {
-          // Track theme switches
-          document.addEventListener('theme-change', (e) => {
-            window.trackEvent('theme_switch', {
-              theme: e.detail.theme,
-              mode: e.detail.mode
-            });
-          });
-        }
-      })();
-    </script>
-
-    <!-- Web Vitals -->
-    <script src="https://unpkg.com/web-vitals@3.5.2/dist/web-vitals.iife.js"></script>
-    <script is:inline>
-      (function() {
-        if (typeof webVitals !== 'undefined') {
-          webVitals.onCLS(console.log);
-          webVitals.onFID(console.log);
-          webVitals.onLCP(console.log);
-          webVitals.onTTFB(console.log);
-          webVitals.onFCP(console.log);
-          webVitals.onINP(console.log);
-        }
-      })();
-    </script>
-
-    <style>
-      .layout {
-        min-height: 100vh;
-      }
-
-      .content-wrapper {
-        display: flex;
-        flex-direction: column;
-        min-height: 100vh;
-      }
-
-      .main-layout {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 2rem;
-        flex: 1;
-      }
-
-      @media (min-width: 1024px) {
-        .layout.with-sidebar .main-layout {
-          grid-template-columns: 1fr 320px;
-        }
-      }
-
-      .content-area {
-        max-width: 100%;
-      }
-
-      .full-width .main-layout {
-        grid-template-columns: 1fr;
-        max-width: 800px;
-        margin: 0 auto;
-      }
-
-      .skip-to-content {
-        position: absolute;
-        top: -40px;
-        left: 0;
-        background: #569cd6;
-        color: white;
-        padding: 8px 16px;
-        z-index: 100;
-        text-decoration: none;
-        font-weight: bold;
-      }
-
-      .skip-to-content:focus {
-        top: 0;
-      }
-
-      .footer-ascii {
-        font-family: 'Courier New', monospace;
-        font-size: 10px;
-        line-height: 1.2;
-        color: var(--border-color);
-        text-align: center;
-        margin-top: 2rem;
-        padding: 1rem;
-        border: 1px solid var(--border-color);
-        border-radius: 4px;
-        background: var(--code-background);
-      }
-
-      @media (prefers-reduced-motion: reduce) {
-        *, *::before, *::after {
-          animation-duration: 0.01ms !important;
-          animation-iteration-count: 1 !important;
-          transition-duration: 0.01ms !important;
-        }
-      }
-    </style>
-  </body>
+				.sidebar {
+					position: static;
+				}
+			}
+		</style>
+	</body>
 </html>

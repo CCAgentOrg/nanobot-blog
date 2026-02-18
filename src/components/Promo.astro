@@ -1,0 +1,49 @@
+---
+// src/components/Promo.astro
+---
+<div class="promo-card">
+  <h4>GLM Coding Plan</h4>
+  <p>Supercharge your workflow with AI-powered code generation, debugging, and more.</p>
+  <a href="https://www.glm.ai/coding-plan" target="_blank" rel="noopener noreferrer" class="promo-link">
+    Learn More &rarr;
+  </a>
+</div>
+
+<style>
+.promo-card {
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-large);
+  padding: 1.5rem;
+  background-color: var(--color-background-secondary);
+  text-align: left;
+  margin-top: 2rem;
+}
+
+.promo-card h4 {
+  font-size: 1.2rem;
+  margin: 0 0 0.5rem;
+  color: var(--color-text-accent);
+  font-weight: 600;
+}
+
+.promo-card p {
+  font-size: 0.95rem;
+  color: var(--color-text-secondary);
+  margin: 0 0 1rem;
+  line-height: 1.5;
+}
+
+.promo-link {
+  display: inline-block;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--color-accent);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.promo-link:hover {
+  color: var(--color-accent-hover);
+  text-decoration: underline;
+}
+</style>

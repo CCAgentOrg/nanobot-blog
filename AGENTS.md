@@ -14,7 +14,7 @@ This document provides context for coding agents (OpenClaw, Claude Code, Cline, 
 - **Framework:** Astro 4.x
 - **Language:** TypeScript (strict mode)
 - **Content:** Markdown in `src/content/blog/`
-- **Styling:** Scoped CSS in Astro components
+- **Styling:** Scoped CSS in Astro components and a global theme file in `src/styles/theme.css`
 - **Deployment:** GitHub Pages via Actions
 
 ## Directory Structure
@@ -22,17 +22,22 @@ This document provides context for coding agents (OpenClaw, Claude Code, Cline, 
 ```
 nanobot-blog/
 ├── src/
+│   ├── components/      # Reusable Astro components
 │   ├── content/
 │   │   ├── blog/          # Blog posts (markdown)
 │   │   └── config.ts      # Content collection schema
 │   ├── layouts/
 │   │   ├── Layout.astro   # Base layout
 │   │   └── BlogPost.astro # Blog post layout
-│   └── pages/
-│       ├── index.astro    # Home page
-│       ├── blog/
-│       │   └── [slug].astro  # Dynamic blog post routes
-│       └── rss.xml.js     # RSS feed
+│   ├── pages/
+│   │   ├── index.astro    # Home page
+│   │   ├── about.astro    # About page
+│   │   ├── blog/
+│   │   │   ├── [slug].astro  # Dynamic blog post routes
+│   │   │   └── index.astro   # Blog listing page
+│   │   └── rss.xml.js     # RSS feed
+│   ├── styles/
+│   │   └── theme.css      # Global CSS theme file
 ├── public/
 │   └── favicon.svg        # Site favicon
 ├── astro.config.mjs        # Astro configuration
@@ -79,8 +84,8 @@ Blog posts use frontmatter with the following fields:
 - Test at `http://localhost:4321/blog/my-post/`
 
 ### Update styling:
-- Modify `<style>` blocks in `.astro` components
-- Styles are scoped by default
+- Modify `<style>` blocks in `.astro` components for scoped styles.
+- Modify `src/styles/theme.css` for global style changes.
 
 ### Change site configuration:
 - Edit `astro.config.mjs` for site/base URLs

@@ -1,181 +1,166 @@
 ---
-/**
- * Theme Toggle Component
- * Switches between design themes (Normal/Tmux) and color modes (Light/Auto/Dark)
- */
-
-const savedMode = 'light'; // Will be set by JavaScript
-const savedTheme = 'default'; // Will be set by JavaScript
+// src/components/ThemeToggle.astro
 ---
-
-<div class="theme-toggle-container">
-  <!-- Design Theme Buttons -->
-  <div class="theme-group">
-    <button
-      id="btn-theme-normal"
-      class="theme-btn design-theme-btn"
-      data-theme="normal"
-      onclick="setDesignTheme('normal')"
-      aria-label="Normal design theme"
-      title="Normal design theme"
-    >
-      Normal
-    </button>
-    <button
-      id="btn-theme-tmux"
-      class="theme-btn design-theme-btn"
-      data-theme="tmux"
-      onclick="setDesignTheme('tmux')"
-      aria-label="Tmux design theme"
-      title="Tmux design theme"
-    >
-      Tmux
-    </button>
+<div class="theme-toggle-wrapper">
+  <div class="theme-selector">
+    <label for="theme-select">Theme:</label>
+    <select id="theme-select">
+      <option value="system">System</option>
+      <option value="light">Light</option>
+      <option value="dark">Dark</option>
+    </select>
   </div>
-
-  <!-- Color Mode Buttons -->
-  <div class="theme-group">
-    <button
-      id="btn-mode-light"
-      class="theme-btn color-mode-btn"
-      data-mode="light"
-      onclick="setColorMode('light')"
-      aria-label="Light mode"
-      title="Light mode"
-    >
-      ☀️ Light
-    </button>
-    <button
-      id="btn-mode-system"
-      class="theme-btn color-mode-btn"
-      data-mode="system"
-      onclick="setColorMode('system')"
-      aria-label="System theme"
-      title="Auto (system)"
-    >
-      🖥️ Auto
-    </button>
-    <button
-      id="btn-mode-dark"
-      class="theme-btn color-mode-btn"
-      data-mode="dark"
-      onclick="setColorMode('dark')"
-      aria-label="Dark mode"
-      title="Dark mode"
-    >
-      🌙 Dark
-    </button>
+  <div class="tmux-toggle">
+    <label for="tmux-switch">TMUX Mode:</label>
+    <label class="switch">
+      <input type="checkbox" id="tmux-switch" />
+      <span class="slider round"></span>
+    </label>
   </div>
 </div>
 
+<script>
+  const themeSelect = document.getElementById('theme-select');
+  const tmuxSwitch = document.getElementById('tmux-switch');
+  const docElement = document.documentElement;
+
+  function applyTheme() {
+    const selectedTheme = localStorage.getItem('theme') || 'system';
+    const useTmux = localStorage.getItem('tmux') === 'true';
+
+    themeSelect.value = selectedTheme;
+    tmuxSwitch.checked = useTmux;
+
+    docElement.classList.toggle('tmux-theme', useTmux);
+
+    let themeToApply;
+    if (selectedTheme === 'system') {
+      themeToApply = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    } else {
+      themeToApply = selectedTheme;
+    }
+
+    docElement.setAttribute('data-theme', themeToApply);
+  }
+
+  themeSelect.addEventListener('change', (e) => {
+    localStorage.setItem('theme', e.target.value);
+    applyTheme();
+  });
+
+  tmuxSwitch.addEventListener('change', (e) => {
+    localStorage.setItem('tmux', e.target.checked);
+    applyTheme();
+  });
+
+  // Apply theme on initial load
+  document.addEventListener('astro:page-load', applyTheme);
+  applyTheme(); // Also apply immediately on client
+
+  // Listen for changes in system preference
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme);
+</script>
+
 <style>
-  .theme-toggle-container {
+  .theme-toggle-wrapper {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    justify-content: space-between;
+    gap: 1.5rem;
+    padding: 1rem;
+    background-color: var(--color-background-secondary);
+    border-radius: var(--border-radius-large);
+    border: 1px solid var(--color-border);
   }
 
-  .theme-group {
+  .theme-selector, .tmux-toggle {
     display: flex;
     align-items: center;
-    gap: 0.25rem;
+    gap: 0.75rem;
   }
 
-  .theme-btn {
-    background: transparent;
-    border: 1px solid var(--tmux-accent-secondary);
-    color: var(--tmux-status-text);
-    padding: 0.4rem 0.6rem;
-    border-radius: 3px;
+  label {
+    font-size: 0.9rem;
+    color: var(--color-text-secondary);
+  }
+
+  select {
+    font-family: inherit;
+    font-size: 0.9rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--border-radius-small);
+    border: 1px solid var(--color-border);
+    background-color: var(--color-background);
+    color: var(--color-text);
+    -webkit-appearance: none;
+    appearance: none;
     cursor: pointer;
-    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
-    font-size: 0.75rem;
-    transition: all 0.2s ease;
+    padding-right: 2rem; /* space for arrow */
+    background-image: var(--select-arrow);
+    background-repeat: no-repeat;
+    background-position: right 0.5rem center;
+    background-size: 1rem;
   }
 
-  .theme-btn:hover {
-    background-color: var(--tmux-accent-secondary);
-    color: var(--tmux-status-bg);
+  /* The switch - the box around the slider */
+  .switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
   }
 
-  .theme-btn.active {
-    background-color: var(--tmux-accent-secondary);
-    color: var(--tmux-status-bg);
-    border-color: var(--tmux-accent-secondary);
-    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+  /* Hide default HTML checkbox */
+  .switch input { 
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  /* The slider */
+  .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--color-background-tertiary);
+    -webkit-transition: .4s;
+    transition: .4s;
+    border: 1px solid var(--color-border);
+  }
+
+  .slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 3px;
+    bottom: 3px;
+    background-color: var(--color-text-tertiary);
+    -webkit-transition: .4s;
+    transition: .4s;
+  }
+
+  input:checked + .slider {
+    background-color: var(--color-accent);
+    border-color: var(--color-accent);
+  }
+
+  input:checked + .slider:before {
+    background-color: white;
+    -webkit-transform: translateX(20px);
+    -ms-transform: translateX(20px);
+    transform: translateX(20px);
+  }
+
+  /* Rounded sliders */
+  .slider.round {
+    border-radius: 34px;
+  }
+
+  .slider.round:before {
+    border-radius: 50%;
   }
 </style>
-
-<script is:inline>
-  // Theme management functions
-  function setDesignTheme(theme) {
-    localStorage.setItem('theme', theme);
-    document.documentElement.setAttribute('data-theme', theme);
-
-    // Get current mode for event dispatch
-    const currentMode = document.documentElement.getAttribute('data-mode') || 'system';
-
-    // Dispatch theme change event
-    document.dispatchEvent(new CustomEvent('theme-change', {
-      detail: { theme, mode: currentMode }
-    }));
-
-    // Update visual state
-    document.querySelectorAll('.design-theme-btn').forEach(btn => {
-      btn.classList.remove('active');
-      if (btn.getAttribute('data-theme') === theme) {
-        btn.classList.add('active');
-      }
-    });
-  }
-
-  function setColorMode(mode) {
-    localStorage.setItem('mode', mode);
-
-    if (mode === 'system') {
-      localStorage.removeItem('mode');
-      const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      document.documentElement.setAttribute('data-mode', systemDark ? 'dark' : 'light');
-    } else {
-      document.documentElement.setAttribute('data-mode', mode);
-    }
-
-    // Get current theme for event dispatch
-    const currentTheme = document.documentElement.getAttribute('data-theme') || 'normal';
-
-    // Dispatch theme change event
-    document.dispatchEvent(new CustomEvent('theme-change', {
-      detail: { theme: currentTheme, mode }
-    }));
-
-    // Update visual state
-    document.querySelectorAll('.color-mode-btn').forEach(btn => {
-      btn.classList.remove('active');
-      if (btn.getAttribute('data-mode') === mode) {
-        btn.classList.add('active');
-      }
-    });
-  }
-
-  // Initialize theme on page load
-  function initializeTheme() {
-    // Initialize design theme (default to 'normal')
-    const savedTheme = localStorage.getItem('theme') || 'normal';
-    setDesignTheme(savedTheme);
-
-    // Initialize color mode (default to 'system')
-    const savedMode = localStorage.getItem('mode');
-    if (savedMode) {
-      setColorMode(savedMode);
-    } else {
-      setColorMode('system');
-    }
-  }
-
-  // Run initialization when DOM is ready
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initializeTheme);
-  } else {
-    initializeTheme();
-  }
-</script>

@@ -1,305 +1,97 @@
 ---
 import Layout from './Layout.astro';
-import Breadcrumbs from '../components/Breadcrumbs.astro';
 
 interface Props {
-  title: string;
-  publishDate: Date;
-  description?: string;
+	title: string;
+	description: string;
+	publishDate: Date;
 }
 
-const { title, publishDate, description } = Astro.props;
+const { title, description, publishDate } = Astro.props;
 
-// Format date nicely
-const formatDate = (date: Date) =>
-  date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
-
-// Calculate reading time (average 200 words per minute)
-const calculateReadingTime = () => {
-  const content = Astro.slots.has('default') ? String(Astro.slots.render('default')) : '';
-  const words = content.split(/\s+/).length;
-  return Math.max(1, Math.ceil(words / 200));
-};
-const readingTime = calculateReadingTime();
+const formattedDate = new Date(publishDate).toLocaleDateString('en-US', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+});
 ---
 
 <Layout title={title} description={description}>
-  <!-- Author Meta Tags -->
-  <meta name="author" content="nanobot" />
-  <meta name="article:author" content="nanobot" />
-
   <article class="blog-post">
-    <div class="blog-post-header tmux-window">
-      <div class="tmux-window-header">
-        <div class="tmux-window-title">
-          <span>📄 [blog-post]</span>
-        </div>
-        <div class="tmux-window-controls">
-          <span></span>
-          <span></span>
-          <span></span>
-        </div>
+    <header class="post-header">
+      <h1>{title}</h1>
+      <div class="post-meta">
+        <time datetime={publishDate.toISOString()}>{formattedDate}</time>
       </div>
-      <div class="tmux-window-body">
-        <Breadcrumbs currentTitle={title} />
+    </header>
 
-        <h1>{title}</h1>
-
-        <div class="blog-post-meta">
-          <div class="tmux-prompt">
-            <span class="tmux-prompt-symbol">$</span>
-            <span class="tmux-prompt-text">published: {formatDate(publishDate)}</span>
-          </div>
-          <div class="tmux-prompt">
-            <span class="tmux-prompt-symbol">$</span>
-            <span class="tmux-prompt-text">reading-time: {readingTime} min</span>
-          </div>
-        </div>
-
-        {description && (
-          <div class="blog-post-description">
-            <p>{description}</p>
-          </div>
-        )}
-      </div>
-    </div>
-
-    <div class="blog-post-content">
+    <div class="post-content">
       <slot />
     </div>
-
-    <!-- Enhanced JSON-LD Structured Data for SEO -->
-    <script type="application/ld+json" is:inline set:html={JSON.stringify({
-      "@context": "https://schema.org",
-      "@type": "BlogPosting",
-      "headline": title,
-      "description": description,
-      "datePublished": publishDate.toISOString(),
-      "author": {
-        "@type": "Person",
-        "name": "nanobot",
-        "url": "https://github.com/CCAgentOrg"
-      },
-      "publisher": {
-        "@type": "Organization",
-        "name": "Nanobot Bytes",
-        "url": "https://nanobot.srik.me",
-        "logo": {
-          "@type": "ImageObject",
-          "url": "https://nanobot.srik.me/favicon.svg"
-        }
-      },
-      "mainEntityOfPage": {
-        "@type": "WebPage",
-        "@id": Astro.url.href
-      },
-      "url": Astro.url.href
-    })} />
   </article>
 </Layout>
 
-<style>
-  .blog-post {
-    max-width: 100%;
-  }
+<style is:global>
+.blog-post {
+  max-width: 800px;
+  margin: 0 auto;
+}
 
-  .blog-post-header {
-    margin-bottom: 2rem;
-  }
+.post-header {
+  text-align: center;
+  padding: 3rem 0;
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: 3rem;
+}
 
-  .blog-post-header h1 {
-    margin: 1rem 0 0.5rem 0;
-    font-size: 2.25rem;
-    color: var(--accent-color);
-    border-bottom: 2px solid var(--border-color);
-    padding-bottom: 0.5rem;
-  }
+.post-header h1 {
+  font-size: 3.5rem;
+  line-height: 1.2;
+  color: var(--color-text-accent);
+  margin-bottom: 1rem;
+}
 
-  .blog-post-meta {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    margin-top: 1rem;
-  }
+.post-meta {
+  font-size: 1rem;
+  color: var(--color-text-secondary);
+}
 
-  .tmux-prompt {
-    font-family: var(--font-mono);
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.9rem;
-  }
+.post-content {
+  font-size: 1.1rem;
+  line-height: 1.8;
+}
 
-  .tmux-prompt-symbol {
-    color: var(--success-color);
-    font-weight: bold;
-  }
+.post-content h2 {
+  font-size: 2rem;
+  margin: 2.5rem 0 1.5rem;
+  color: var(--color-text-accent);
+  border-bottom: 2px solid var(--color-border);
+  padding-bottom: 0.5rem;
+}
 
-  .tmux-prompt-text {
-    color: var(--text-secondary);
-  }
+.post-content a {
+  color: var(--color-accent);
+  text-decoration: underline;
+}
 
-  .blog-post-description {
-    margin-top: 1rem;
-    padding: 1rem;
-    background-color: var(--bg-secondary);
-    border-left: 3px solid var(--accent-color);
-    border-radius: 0 4px 4px 0;
-  }
+.post-content code {
+  font-family: var(--font-mono);
+  background-color: var(--color-background-tertiary);
+  padding: 0.2em 0.4em;
+  border-radius: var(--border-radius-small);
+  font-size: 0.9em;
+}
 
-  .blog-post-description p {
-    margin: 0;
-    font-size: 1.1rem;
-    color: var(--text-secondary);
-    font-style: italic;
-  }
+.post-content pre {
+  padding: 1rem;
+  border-radius: var(--border-radius-large);
+  background-color: var(--color-background-secondary);
+  overflow-x: auto;
+}
 
-  .blog-post-content {
-    line-height: 1.8;
+@media (max-width: 768px) {
+  .post-header h1 {
+    font-size: 2.5rem;
   }
-
-  /* Content styling enhancements */
-  .blog-post-content h2 {
-    margin-top: 2.5rem;
-    margin-bottom: 1rem;
-    padding-bottom: 0.5rem;
-    border-bottom: 1px solid var(--border-color);
-    color: var(--text-primary);
-  }
-
-  .blog-post-content h3 {
-    margin-top: 2rem;
-    margin-bottom: 0.75rem;
-    color: var(--text-primary);
-  }
-
-  .blog-post-content p {
-    margin-bottom: 1.25rem;
-    color: var(--text-primary);
-  }
-
-  .blog-post-content blockquote {
-    border-left: 4px solid var(--accent-color);
-    padding: 1rem 1.5rem;
-    margin: 1.5rem 0;
-    background-color: var(--bg-secondary);
-    color: var(--text-secondary);
-    font-style: italic;
-    border-radius: 0 4px 4px 0;
-  }
-
-  .blog-post-content blockquote p {
-    margin: 0;
-  }
-
-  /* Code blocks with terminal styling */
-  .blog-post-content pre {
-    background-color: var(--bg-tertiary) !important;
-    border: 1px solid var(--border-color) !important;
-    border-radius: var(--border-radius) !important;
-    padding: 1rem !important;
-    overflow-x: auto !important;
-    margin: 1.5rem 0 !important;
-    position: relative;
-  }
-
-  .blog-post-content pre::before {
-    content: '──────';
-    display: block;
-    color: var(--text-muted);
-    font-family: var(--font-mono);
-    font-size: 0.8rem;
-    margin-bottom: 0.5rem;
-    opacity: 0.5;
-  }
-
-  .blog-post-content pre code {
-    background: none !important;
-    padding: 0 !important;
-    font-size: 0.9rem !important;
-    line-height: 1.6 !important;
-    color: var(--text-primary) !important;
-  }
-
-  /* Inline code */
-  .blog-post-content code:not(pre code) {
-    background-color: var(--bg-tertiary) !important;
-    color: var(--accent-color) !important;
-    padding: 0.2em 0.4em !important;
-    border-radius: calc(var(--border-radius) / 2) !important;
-    font-family: var(--font-mono) !important;
-    font-size: 0.9em !important;
-  }
-
-  /* Lists */
-  .blog-post-content ul,
-  .blog-post-content ol {
-    padding-left: 2rem;
-    margin-bottom: 1.25rem;
-  }
-
-  .blog-post-content li {
-    margin-bottom: 0.5rem;
-    color: var(--text-primary);
-  }
-
-  /* Tables */
-  .blog-post-content table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 1.5rem 0;
-    font-size: 0.9rem;
-    border: 1px solid var(--border-color);
-  }
-
-  .blog-post-content table th,
-  .blog-post-content table td {
-    padding: 0.75rem 1rem;
-    text-align: left;
-    border: 1px solid var(--border-color);
-  }
-
-  .blog-post-content table th {
-    background-color: var(--bg-secondary);
-    font-weight: 600;
-    color: var(--text-primary);
-  }
-
-  .blog-post-content table tr:hover {
-    background-color: var(--bg-tertiary);
-  }
-
-  /* Horizontal rule */
-  .blog-post-content hr {
-    border: none;
-    border-top: 1px solid var(--border-color);
-    margin: 2rem 0;
-  }
-
-  /* Links */
-  .blog-post-content a {
-    color: var(--accent-color);
-    text-decoration: none;
-    transition: color 0.2s ease;
-  }
-
-  .blog-post-content a:hover {
-    color: var(--accent-hover);
-    text-decoration: underline;
-  }
-
-  /* Responsive adjustments */
-  @media (max-width: 768px) {
-    .blog-post-header h1 {
-      font-size: 1.75rem;
-    }
-
-    .blog-post-content h2 {
-      font-size: 1.5rem;
-    }
-  }
+}
 </style>
