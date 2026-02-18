@@ -125,6 +125,77 @@ const easterEggs: Record<string, () => void> = {
     console.log('%cAvailable commands:', 'color: #4ec9b0; font-weight: bold;');
     console.log('%c' + commands, 'color: #ce9178;');
     showTerminalMessage('help', `Try: ${commands}`);
+  },
+  'fortune': () => {
+    const fortunes = [
+      "The best way to predict the future is to create it.",
+      "Debugging is twice as hard as writing the code in the first place.",
+      "There are only 10 types of people: those who understand binary and those who don't.",
+      "A clever person solves a problem. A wise person avoids it.",
+      "The best error message is the one that never shows up.",
+      "Code is like humor. When you have to explain it, it's bad.",
+      "First, solve the problem. Then, write the code.",
+    ];
+    const fortune = fortunes[Math.floor(Math.random() * fortunes.length)];
+    console.log('%c🔮 ' + fortune, 'color: #4ec9b0; font-style: italic; font-size: 14px;');
+    showTerminalMessage('fortune', fortune);
+  },
+  'history': () => {
+    const history = [
+      'git commit -m "add tmux theme"',
+      'npm run dev',
+      'sudo make me a sandwich',
+      'git push origin main',
+      'neofetch',
+    ];
+    const output = history.map((cmd, i) => `  ${i + 1}  ${cmd}`).join('\n');
+    console.log('%c' + output, 'color: #ce9178; font-family: monospace;');
+    showTerminalMessage('history', 'Check console for command history');
+  },
+  'cowsay': () => {
+    const messages = [
+      "Welcome to nanobytes!",
+      "Have a great day!",
+      "Keep exploring!",
+      "Nice terminal setup!",
+    ];
+    const msg = messages[Math.floor(Math.random() * messages.length)];
+    const cow = `
+  ____________________
+< ${msg} >
+  --------------------
+         \\   ^__^
+          \\  (oo)\\_______
+             (__)\\       )\\/\\
+                 ||----w |
+                 ||     ||
+`;
+    console.log('%c' + cow, 'font-family: monospace; color: #6a9955;');
+    showTerminalMessage('cowsay', 'Moo! 🐮');
+  },
+  'matrix': () => {
+    console.log('%c🕶️ Wake up, Neo...', 'color: #4ec9b0; font-size: 18px; font-weight: bold;');
+    console.log('%cFollow the white rabbit. 🐇', 'color: #569cd6; font-size: 14px;');
+    showTerminalMessage('matrix', 'Follow the white rabbit...');
+  },
+  'hack': () => {
+    console.log('%c🖥️  Accessing mainframe...', 'color: #ce9178;');
+    setTimeout(() => {
+      console.log('%c[████████████████████] 100%', 'color: #6a9955;');
+      console.log('%cJust kidding! This is a blog, not the Pentagon 😄', 'color: #4ec9b0; font-size: 14px;');
+    }, 1000);
+    showTerminalMessage('hack', 'Accessing mainframe... Just kidding! 😄');
+  },
+  'nanobot': () => {
+    console.log('%c╔══════════════════════════════════════╗', 'color: #4ec9b0;');
+    console.log('%c║  🤖 NANOBOT v2.0                   ║', 'color: #4ec9b0;');
+    console.log('%c╠══════════════════════════════════════╣', 'color: #4ec9b0;');
+    console.log('%c║  Status: Operational               ║', 'color: #6a9955;');
+    console.log('%c║  Theme: Tmux                       ║', 'color: #569cd6;');
+    console.log('%c║  Powered by: z.ai GLM 4.7          ║', 'color: #ce9178;');
+    console.log('%c║  GitHub: CCAgentOrg/nanobot-blog  ║', 'color: #d4d4d4;');
+    console.log('%c╚══════════════════════════════════════╝', 'color: #4ec9b0;');
+    showTerminalMessage('nanobot', 'System operational ✅');
   }
 };
 
@@ -166,10 +237,8 @@ function showTerminalMessage(command: string, message: string): void {
 }
 
 // Listen for keyboard input (Ctrl+Shift+C to open command input)
-let commandMode = false;
 document.addEventListener('keydown', (e: KeyboardEvent) => {
   if (e.ctrlKey && e.shiftKey && e.key === 'C') {
-    commandMode = true;
     const command = prompt('$ Enter terminal command:');
     if (command && easterEggs[command]) {
       easterEggs[command]();

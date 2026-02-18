@@ -1,0 +1,26 @@
+---
+/**
+ * Easter Eggs Component
+ * Integrates Konami code and other terminal surprises
+ */
+
+// Empty frontmatter - no server-side rendering needed
+---
+
+<script>
+  // Import KonamiCode from the module
+  const KonamiCodeModule = await import('../scripts/konami-code.js');
+
+  function onKonamiCode() {
+    // Easter egg activated!
+    console.log('🎮 Konami code activated!');
+
+    // Show a fun console message
+    console.log('%c🎮 KONAMI CODE ACTIVATED!', 'color: #4ec9b0; font-size: 24px; font-weight: bold;');
+    console.log('%c↑↑↓↓←→←→BA', 'color: #569cd6; font-size: 16px;');
+    console.log('%cYou found the secret! Thanks for exploring! 🚀', 'color: #6a9955; font-size: 14px;');
+  }
+
+  // Initialize Konami code on page load
+  new KonamiCodeModule.KonamiCode(onKonamiCode);
+</script>
