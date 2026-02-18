@@ -12,10 +12,10 @@ const savedTheme = 'default'; // Will be set by JavaScript
   <!-- Design Theme Buttons -->
   <div class="theme-group">
     <button
-      id="btn-theme-default"
+      id="btn-theme-normal"
       class="theme-btn design-theme-btn"
-      data-theme="default"
-      onclick="setDesignTheme('default')"
+      data-theme="normal"
+      onclick="setDesignTheme('normal')"
       aria-label="Normal design theme"
       title="Normal design theme"
     >
@@ -108,8 +108,8 @@ const savedTheme = 'default'; // Will be set by JavaScript
 
 <script>
   // Theme management functions
-  function setDesignTheme(theme: 'default' | 'tmux') {
-    localStorage.setItem('design-theme', theme);
+  function setDesignTheme(theme) {
+    localStorage.setItem('theme', theme);
     document.documentElement.setAttribute('data-theme', theme);
 
     // Update visual state
@@ -121,11 +121,11 @@ const savedTheme = 'default'; // Will be set by JavaScript
     });
   }
 
-  function setColorMode(mode: 'light' | 'system' | 'dark') {
-    localStorage.setItem('color-mode', mode);
+  function setColorMode(mode) {
+    localStorage.setItem('mode', mode);
 
     if (mode === 'system') {
-      localStorage.removeItem('color-mode');
+      localStorage.removeItem('mode');
       const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
       document.documentElement.setAttribute('data-mode', systemDark ? 'dark' : 'light');
     } else {
@@ -143,14 +143,14 @@ const savedTheme = 'default'; // Will be set by JavaScript
 
   // Initialize theme on page load
   function initializeTheme() {
-    // Initialize design theme (default to 'default')
-    const savedTheme = localStorage.getItem('design-theme') || 'default';
-    setDesignTheme(savedTheme as 'default' | 'tmux');
+    // Initialize design theme (default to 'normal')
+    const savedTheme = localStorage.getItem('theme') || 'normal';
+    setDesignTheme(savedTheme);
 
     // Initialize color mode (default to 'system')
-    const savedMode = localStorage.getItem('color-mode');
+    const savedMode = localStorage.getItem('mode');
     if (savedMode) {
-      setColorMode(savedMode as 'light' | 'system' | 'dark');
+      setColorMode(savedMode);
     } else {
       setColorMode('system');
     }
