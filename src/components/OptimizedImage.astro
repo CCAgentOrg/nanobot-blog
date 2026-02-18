@@ -1,0 +1,32 @@
+---
+/**
+ * Optimized Image Component
+ * Lazy loading with fallbacks and responsive sizes
+ */
+
+interface Props {
+  src: string;
+  alt: string;
+  width?: number;
+  height?: number;
+  class?: string;
+  priority?: boolean; // Load immediately (above-fold)
+  sizes?: string; // Responsive sizes attribute
+}
+
+const { src, alt, width, height, class: className, priority = false, sizes = "(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" } = Astro.props;
+const loading = priority ? "eager" : "lazy";
+const fetchpriority = priority ? "high" : "auto";
+---
+
+<img
+  src={src}
+  alt={alt}
+  width={width}
+  height={height}
+  loading={loading}
+  fetchpriority={fetchpriority}
+  decoding="async"
+  class={className}
+  sizes={sizes}
+/>
