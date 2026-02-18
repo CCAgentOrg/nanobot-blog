@@ -246,3 +246,100 @@ h1, h2, h3, h4, h5, h6 {
               border-color var(--transition-speed) ease,
               box-shadow var(--transition-speed) ease;
 }
+
+/* ============================================
+   MOBILE DRAWER STYLES
+   ============================================ */
+
+.mobile-menu-toggle {
+  display: none;
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  background-color: var(--accent-color);
+  color: var(--bg-primary);
+  border: none;
+  border-radius: 50%;
+  width: 56px;
+  height: 56px;
+  cursor: pointer;
+  box-shadow: var(--shadow-lg);
+  z-index: 1000;
+  transition: all var(--transition-speed) ease;
+  font-size: 1.5rem;
+  align-items: center;
+  justify-content: center;
+}
+
+.mobile-menu-toggle:hover {
+  background-color: var(--accent-hover);
+  transform: scale(1.1);
+}
+
+.mobile-menu-toggle.active {
+  background-color: var(--error-color);
+}
+
+.mobile-drawer {
+  display: none;
+  position: fixed;
+  top: 0;
+  right: -100%;
+  width: 320px;
+  height: 100vh;
+  background-color: var(--bg-primary);
+  border-left: 2px solid var(--border-color);
+  box-shadow: -4px 0 15px rgba(0, 0, 0, 0.3);
+  z-index: 999;
+  overflow-y: auto;
+  transition: right var(--transition-speed) ease;
+  padding: 2rem 1.5rem;
+}
+
+.mobile-drawer.open {
+  right: 0;
+}
+
+.mobile-drawer-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 998;
+  opacity: 0;
+  transition: opacity var(--transition-speed) ease;
+}
+
+.mobile-drawer-overlay.open {
+  opacity: 1;
+}
+
+@media (max-width: 1023px) {
+  .mobile-menu-toggle {
+    display: flex;
+  }
+
+  .mobile-drawer {
+    display: block;
+  }
+
+  .mobile-drawer-overlay {
+    display: block;
+  }
+
+  /* Hide sidebar on mobile (it's in drawer now) */
+  .sidebar {
+    display: none;
+  }
+
+  .main-layout {
+    grid-template-columns: 1fr !important;
+  }
+
+  .content-area {
+    max-width: 100% !important;
+  }
+}
