@@ -4,10 +4,7 @@
  * Slide-out sidebar for mobile devices with terminal styling
  */
 
-import ThemeToggle from './ThemeToggle.astro';
 import Sidebar from './Sidebar.astro';
-
-const showThemeToggle = true;
 ---
 
 <aside
@@ -30,12 +27,6 @@ const showThemeToggle = true;
       ×
     </button>
   </div>
-
-  {showThemeToggle && (
-    <div class="mobile-drawer-section">
-      <ThemeToggle />
-    </div>
-  )}
 
   <div class="mobile-drawer-section">
     <Sidebar />
