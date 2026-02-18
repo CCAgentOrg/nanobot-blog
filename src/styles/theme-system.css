@@ -16,7 +16,7 @@
    DEFAULT THEME (Normal Blog Design)
    ============================================ */
 
-[data-theme="default"] {
+[data-theme="normal"] {
   --border-radius: 0.5rem;
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.1);
   --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -32,7 +32,7 @@
 }
 
 /* Default + Light Mode */
-[data-theme="default"][data-mode="light"] {
+[data-theme="normal"][data-mode="light"] {
   --bg-primary: #ffffff;
   --bg-secondary: #f9fafb;
   --bg-tertiary: #f3f4f6;
@@ -48,7 +48,7 @@
 }
 
 /* Default + Dark Mode */
-[data-theme="default"][data-mode="dark"] {
+[data-theme="normal"][data-mode="dark"] {
   --bg-primary: #0f172a;
   --bg-secondary: #1e293b;
   --bg-tertiary: #334155;

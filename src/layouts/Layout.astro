@@ -94,25 +94,6 @@ const modifiedDate = new Date().toISOString();
   <body>
     <SkipToContent />
 
-    <!-- Theme Toggle (set via localStorage) -->
-    <script is:inline>
-      (function() {
-        try {
-          const savedTheme = localStorage.getItem('theme');
-          const savedMode = localStorage.getItem('mode');
-
-          if (savedTheme === 'tmux' || savedTheme === 'normal') {
-            document.documentElement.setAttribute('data-theme', savedTheme);
-          }
-          if (savedMode === 'light' || savedMode === 'dark') {
-            document.documentElement.setAttribute('data-mode', savedMode);
-          }
-        } catch (e) {
-          console.error('[theme] Failed to load theme:', e);
-        }
-      })();
-    </script>
-
     <!-- Mobile Drawer -->
     <MobileDrawer />
 

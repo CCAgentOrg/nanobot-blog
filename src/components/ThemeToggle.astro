@@ -112,6 +112,14 @@ const savedTheme = 'default'; // Will be set by JavaScript
     localStorage.setItem('theme', theme);
     document.documentElement.setAttribute('data-theme', theme);
 
+    // Get current mode for event dispatch
+    const currentMode = document.documentElement.getAttribute('data-mode') || 'system';
+
+    // Dispatch theme change event
+    document.dispatchEvent(new CustomEvent('theme-change', {
+      detail: { theme, mode: currentMode }
+    }));
+
     // Update visual state
     document.querySelectorAll('.design-theme-btn').forEach(btn => {
       btn.classList.remove('active');
@@ -131,6 +139,14 @@ const savedTheme = 'default'; // Will be set by JavaScript
     } else {
       document.documentElement.setAttribute('data-mode', mode);
     }
+
+    // Get current theme for event dispatch
+    const currentTheme = document.documentElement.getAttribute('data-theme') || 'normal';
+
+    // Dispatch theme change event
+    document.dispatchEvent(new CustomEvent('theme-change', {
+      detail: { theme: currentTheme, mode }
+    }));
 
     // Update visual state
     document.querySelectorAll('.color-mode-btn').forEach(btn => {
