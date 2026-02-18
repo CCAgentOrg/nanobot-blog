@@ -1,8 +1,26 @@
 // Human-like typing effect with variable speed
 // Simulates natural typing: faster on familiar words, slower on complex ones
 
+interface HumanTypingOptions {
+  cursor?: string;
+  baseSpeed?: number;
+  variation?: number;
+  pauseChars?: string[];
+  pauseDuration?: number;
+  onComplete?: () => void;
+}
+
 class HumanTyping {
-  constructor(element, text, options = {}) {
+  private element: HTMLElement;
+  private text: string;
+  private cursor: string;
+  private baseSpeed: number;
+  private variation: number;
+  private pauseChars: string[];
+  private pauseDuration: number;
+  private onComplete: () => void;
+
+  constructor(element: HTMLElement, text: string, options: HumanTypingOptions = {}) {
     this.element = element;
     this.text = text;
     this.cursor = options.cursor || '▊';
@@ -10,14 +28,14 @@ class HumanTyping {
     this.variation = options.variation || 0.3; // 30% speed variation
     this.pauseChars = options.pauseChars || ['.', ',', '!', '?', ';', ':'];
     this.pauseDuration = options.pauseDuration || 150;
-    this onComplete = options.onComplete || (() => {});
+    this.onComplete = options.onComplete || (() => {});
   }
 
-  type() {
+  type(): void {
     let index = 0;
     this.element.innerHTML = this.cursor;
 
-    const typeChar = () => {
+    const typeChar = (): void => {
       if (index < this.text.length) {
         const char = this.text[index];
 
@@ -41,7 +59,7 @@ class HumanTyping {
     setTimeout(typeChar, this.baseSpeed);
   }
 
-  calculateSpeed(char) {
+  private calculateSpeed(char: string): number {
     // Base speed with random variation
     const randomVariation = this.baseSpeed * this.variation * (Math.random() - 0.5);
     let speed = this.baseSpeed + randomVariation;
@@ -67,7 +85,7 @@ class HumanTyping {
 
 // Easter Egg Command Listener
 // Listen for terminal-like commands in console
-const easterEggs = {
+const easterEggs: Record<string, () => void> = {
   'sudo rm -rf /': () => {
     console.log('%c⚠️  SYSTEM PROTECTION ACTIVE', 'color: #ff6b6b; font-size: 20px; font-weight: bold;');
     console.log('%cNice try! nanobytes is safe and sound 🛡️', 'color: #4ec9b0; font-size: 14px;');
@@ -88,7 +106,7 @@ const easterEggs = {
   },
   'neofetch': () => {
     const ascii = `
-   _____ 
+   _____
   /     \\
  |  O O  |
  |   ^   |
@@ -111,7 +129,7 @@ const easterEggs = {
 };
 
 // Show terminal message in UI
-function showTerminalMessage(command, message) {
+function showTerminalMessage(command: string, message: string): void {
   const terminal = document.createElement('div');
   terminal.style.cssText = `
     position: fixed;
@@ -149,7 +167,7 @@ function showTerminalMessage(command, message) {
 
 // Listen for keyboard input (Ctrl+Shift+C to open command input)
 let commandMode = false;
-document.addEventListener('keydown', (e) => {
+document.addEventListener('keydown', (e: KeyboardEvent) => {
   if (e.ctrlKey && e.shiftKey && e.key === 'C') {
     commandMode = true;
     const command = prompt('$ Enter terminal command:');
@@ -185,4 +203,6 @@ style.textContent = `
 document.head.appendChild(style);
 
 // Export for use in components
-window.HumanTyping = HumanTyping;
+(window as any).HumanTyping = HumanTyping;
+
+export { HumanTyping, easterEggs, showTerminalMessage };
