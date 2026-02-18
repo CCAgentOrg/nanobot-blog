@@ -13,6 +13,13 @@
     </div>
     <div class="tmux-status-separator">│</div>
     <div class="tmux-status-segment">
+      <span class="tmux-session-info">[session: nanobytes]</span>
+    </div>
+    <div class="tmux-status-segment">
+      <span class="tmux-window-info">[window: main]</span>
+    </div>
+    <div class="tmux-status-separator">│</div>
+    <div class="tmux-status-segment">
       <a href="https://github.com/CCAgentOrg/nanobot-blog" target="_blank" rel="noopener noreferrer">
         [GitHub]
       </a>
@@ -23,6 +30,10 @@
   </div>
 
   <div class="right">
+    <div class="tmux-status-segment">
+      <span class="tmux-branch-info">[branch: main]</span>
+    </div>
+    <div class="tmux-status-separator">│</div>
     <div class="tmux-status-segment">
       <span class="tmux-status-time">--:--</span>
     </div>
@@ -106,6 +117,13 @@
 
   .tmux-status-time {
     color: var(--tmux-text-muted);
+  }
+
+  .tmux-session-info,
+  .tmux-window-info,
+  .tmux-branch-info {
+    color: var(--tmux-accent-secondary);
+    font-size: 0.8rem;
   }
 
   @media (max-width: 768px) {
