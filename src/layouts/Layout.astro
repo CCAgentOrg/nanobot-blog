@@ -98,10 +98,10 @@ const modifiedDate = new Date().toISOString();
     <script is:inline>
       (function() {
         try {
-          const savedTheme = localStorage.getItem('theme');
-          const savedMode = localStorage.getItem('mode');
+          const savedTheme = localStorage.getItem('design-theme');
+          const savedMode = localStorage.getItem('color-mode');
 
-          if (savedTheme === 'tmux' || savedTheme === 'normal') {
+          if (savedTheme === 'tmux' || savedTheme === 'default') {
             document.documentElement.setAttribute('data-theme', savedTheme);
           }
           if (savedMode === 'light' || savedMode === 'dark') {

@@ -1,14 +1,18 @@
 ---
 import GLMWidget from './GLMWidget.astro';
 import RecentPosts from './RecentPosts.astro';
+import ThemeToggle from './ThemeToggle.astro';
 
 /**
  * Sidebar Component
- * Contains GLM widget and recent posts list
+ * Contains GLM widget, theme toggle, and recent posts list
  */
 ---
 
 <aside class="sidebar">
+  <div class="sidebar-section">
+    <ThemeToggle />
+  </div>
   <div class="sidebar-section">
     <GLMWidget />
   </div>

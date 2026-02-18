@@ -114,8 +114,8 @@ const readingTime = calculateReadingTime();
   .blog-post-header h1 {
     margin: 1rem 0 0.5rem 0;
     font-size: 2.25rem;
-    color: var(--tmux-accent-primary);
-    border-bottom: 2px solid var(--tmux-accent-secondary);
+    color: var(--accent-color);
+    border-bottom: 2px solid var(--border-color);
     padding-bottom: 0.5rem;
   }
 
@@ -127,7 +127,7 @@ const readingTime = calculateReadingTime();
   }
 
   .tmux-prompt {
-    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+    font-family: var(--font-mono);
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -135,26 +135,26 @@ const readingTime = calculateReadingTime();
   }
 
   .tmux-prompt-symbol {
-    color: var(--tmux-accent-success);
+    color: var(--success-color);
     font-weight: bold;
   }
 
   .tmux-prompt-text {
-    color: var(--tmux-text-secondary);
+    color: var(--text-secondary);
   }
 
   .blog-post-description {
     margin-top: 1rem;
     padding: 1rem;
-    background-color: var(--tmux-bg-secondary);
-    border-left: 3px solid var(--tmux-accent-secondary);
+    background-color: var(--bg-secondary);
+    border-left: 3px solid var(--accent-color);
     border-radius: 0 4px 4px 0;
   }
 
   .blog-post-description p {
     margin: 0;
     font-size: 1.1rem;
-    color: var(--tmux-text-secondary);
+    color: var(--text-secondary);
     font-style: italic;
   }
 
@@ -167,27 +167,27 @@ const readingTime = calculateReadingTime();
     margin-top: 2.5rem;
     margin-bottom: 1rem;
     padding-bottom: 0.5rem;
-    border-bottom: 1px solid var(--tmux-border-color);
-    color: var(--tmux-text-primary);
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-primary);
   }
 
   .blog-post-content h3 {
     margin-top: 2rem;
     margin-bottom: 0.75rem;
-    color: var(--tmux-text-primary);
+    color: var(--text-primary);
   }
 
   .blog-post-content p {
     margin-bottom: 1.25rem;
-    color: var(--tmux-text-primary);
+    color: var(--text-primary);
   }
 
   .blog-post-content blockquote {
-    border-left: 4px solid var(--tmux-accent-secondary);
+    border-left: 4px solid var(--accent-color);
     padding: 1rem 1.5rem;
     margin: 1.5rem 0;
-    background-color: var(--tmux-bg-secondary);
-    color: var(--tmux-text-secondary);
+    background-color: var(--bg-secondary);
+    color: var(--text-secondary);
     font-style: italic;
     border-radius: 0 4px 4px 0;
   }
@@ -198,9 +198,9 @@ const readingTime = calculateReadingTime();
 
   /* Code blocks with terminal styling */
   .blog-post-content pre {
-    background-color: var(--tmux-bg-secondary) !important;
-    border: 1px solid var(--tmux-border-color) !important;
-    border-radius: 6px !important;
+    background-color: var(--bg-tertiary) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: var(--border-radius) !important;
     padding: 1rem !important;
     overflow-x: auto !important;
     margin: 1.5rem 0 !important;
@@ -210,8 +210,8 @@ const readingTime = calculateReadingTime();
   .blog-post-content pre::before {
     content: '──────';
     display: block;
-    color: var(--tmux-text-muted);
-    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
     font-size: 0.8rem;
     margin-bottom: 0.5rem;
     opacity: 0.5;
@@ -222,16 +222,16 @@ const readingTime = calculateReadingTime();
     padding: 0 !important;
     font-size: 0.9rem !important;
     line-height: 1.6 !important;
-    color: var(--tmux-text-primary) !important;
+    color: var(--text-primary) !important;
   }
 
   /* Inline code */
   .blog-post-content code:not(pre code) {
-    background-color: var(--tmux-bg-tertiary) !important;
-    color: var(--tmux-accent-primary) !important;
+    background-color: var(--bg-tertiary) !important;
+    color: var(--accent-color) !important;
     padding: 0.2em 0.4em !important;
-    border-radius: 3px !important;
-    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace !important;
+    border-radius: calc(var(--border-radius) / 2) !important;
+    font-family: var(--font-mono) !important;
     font-size: 0.9em !important;
   }
 
@@ -244,7 +244,7 @@ const readingTime = calculateReadingTime();
 
   .blog-post-content li {
     margin-bottom: 0.5rem;
-    color: var(--tmux-text-primary);
+    color: var(--text-primary);
   }
 
   /* Tables */
@@ -253,42 +253,42 @@ const readingTime = calculateReadingTime();
     border-collapse: collapse;
     margin: 1.5rem 0;
     font-size: 0.9rem;
-    border: 1px solid var(--tmux-border-color);
+    border: 1px solid var(--border-color);
   }
 
   .blog-post-content table th,
   .blog-post-content table td {
     padding: 0.75rem 1rem;
     text-align: left;
-    border: 1px solid var(--tmux-border-color);
+    border: 1px solid var(--border-color);
   }
 
   .blog-post-content table th {
-    background-color: var(--tmux-bg-secondary);
+    background-color: var(--bg-secondary);
     font-weight: 600;
-    color: var(--tmux-text-primary);
+    color: var(--text-primary);
   }
 
   .blog-post-content table tr:hover {
-    background-color: var(--tmux-bg-tertiary);
+    background-color: var(--bg-tertiary);
   }
 
   /* Horizontal rule */
   .blog-post-content hr {
     border: none;
-    border-top: 1px solid var(--tmux-border-color);
+    border-top: 1px solid var(--border-color);
     margin: 2rem 0;
   }
 
   /* Links */
   .blog-post-content a {
-    color: var(--tmux-accent-primary);
+    color: var(--accent-color);
     text-decoration: none;
     transition: color 0.2s ease;
   }
 
   .blog-post-content a:hover {
-    color: var(--tmux-accent-secondary);
+    color: var(--accent-hover);
     text-decoration: underline;
   }
 
