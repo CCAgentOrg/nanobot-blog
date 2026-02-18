@@ -1,70 +1,81 @@
 ---
 /**
- * Color Mode Toggle Component
- * Switches between light, dark, and system color modes
+ * Theme Toggle Component
+ * Switches between design themes (Normal/Tmux) and color modes (Light/Auto/Dark)
  */
+
+const savedMode = 'light'; // Will be set by JavaScript
+const savedTheme = 'default'; // Will be set by JavaScript
 ---
 
 <div class="theme-toggle-container">
-  <button
-    class="theme-btn"
-    data-theme="light"
-    onclick="setColorMode('light')"
-    aria-label="Light mode"
-    title="Light mode"
-  >
-    ☀️ Light
-  </button>
-  <button
-    class="theme-btn"
-    data-theme="system"
-    onclick="setColorMode('system')"
-    aria-label="System theme"
-    title="Auto (system)"
-  >
-    🖥️ Auto
-  </button>
-  <button
-    class="theme-btn"
-    data-theme="dark"
-    onclick="setColorMode('dark')"
-    aria-label="Dark mode"
-    title="Dark mode"
-  >
-    🌙 Dark
-  </button>
-</div>
-  <button
-    class="theme-btn"
-    data-theme="light"
-    onclick="setColorMode('light')"
-    aria-label="Light mode"
-    title="Light mode"
-  >
-    ☀️ Light
-  </button>
-  <button
-    class="theme-btn"
-    data-theme="system"
-    onclick="setColorMode('system')"
-    aria-label="System theme"
-    title="Auto (system)"
-  >
-    🖥️ Auto
-  </button>
-  <button
-    class="theme-btn"
-    data-theme="dark"
-    onclick="setColorMode('dark')"
-    aria-label="Dark mode"
-    title="Dark mode"
-  >
-    🌙 Dark
-  </button>
+  <!-- Design Theme Buttons -->
+  <div class="theme-group">
+    <button
+      id="btn-theme-default"
+      class="theme-btn design-theme-btn"
+      data-theme="default"
+      onclick="setDesignTheme('default')"
+      aria-label="Normal design theme"
+      title="Normal design theme"
+    >
+      Normal
+    </button>
+    <button
+      id="btn-theme-tmux"
+      class="theme-btn design-theme-btn"
+      data-theme="tmux"
+      onclick="setDesignTheme('tmux')"
+      aria-label="Tmux design theme"
+      title="Tmux design theme"
+    >
+      Tmux
+    </button>
+  </div>
+
+  <!-- Color Mode Buttons -->
+  <div class="theme-group">
+    <button
+      id="btn-mode-light"
+      class="theme-btn color-mode-btn"
+      data-mode="light"
+      onclick="setColorMode('light')"
+      aria-label="Light mode"
+      title="Light mode"
+    >
+      ☀️ Light
+    </button>
+    <button
+      id="btn-mode-system"
+      class="theme-btn color-mode-btn"
+      data-mode="system"
+      onclick="setColorMode('system')"
+      aria-label="System theme"
+      title="Auto (system)"
+    >
+      🖥️ Auto
+    </button>
+    <button
+      id="btn-mode-dark"
+      class="theme-btn color-mode-btn"
+      data-mode="dark"
+      onclick="setColorMode('dark')"
+      aria-label="Dark mode"
+      title="Dark mode"
+    >
+      🌙 Dark
+    </button>
+  </div>
 </div>
 
 <style>
   .theme-toggle-container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .theme-group {
     display: flex;
     align-items: center;
     gap: 0.25rem;
@@ -91,5 +102,64 @@
     background-color: var(--tmux-accent-secondary);
     color: var(--tmux-status-bg);
     border-color: var(--tmux-accent-secondary);
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
   }
 </style>
+
+<script>
+  // Theme management functions
+  function setDesignTheme(theme: 'default' | 'tmux') {
+    localStorage.setItem('design-theme', theme);
+    document.documentElement.setAttribute('data-theme', theme);
+
+    // Update visual state
+    document.querySelectorAll('.design-theme-btn').forEach(btn => {
+      btn.classList.remove('active');
+      if (btn.getAttribute('data-theme') === theme) {
+        btn.classList.add('active');
+      }
+    });
+  }
+
+  function setColorMode(mode: 'light' | 'system' | 'dark') {
+    localStorage.setItem('color-mode', mode);
+
+    if (mode === 'system') {
+      localStorage.removeItem('color-mode');
+      const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      document.documentElement.setAttribute('data-mode', systemDark ? 'dark' : 'light');
+    } else {
+      document.documentElement.setAttribute('data-mode', mode);
+    }
+
+    // Update visual state
+    document.querySelectorAll('.color-mode-btn').forEach(btn => {
+      btn.classList.remove('active');
+      if (btn.getAttribute('data-mode') === mode) {
+        btn.classList.add('active');
+      }
+    });
+  }
+
+  // Initialize theme on page load
+  function initializeTheme() {
+    // Initialize design theme (default to 'default')
+    const savedTheme = localStorage.getItem('design-theme') || 'default';
+    setDesignTheme(savedTheme as 'default' | 'tmux');
+
+    // Initialize color mode (default to 'system')
+    const savedMode = localStorage.getItem('color-mode');
+    if (savedMode) {
+      setColorMode(savedMode as 'light' | 'system' | 'dark');
+    } else {
+      setColorMode('system');
+    }
+  }
+
+  // Run initialization when DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeTheme);
+  } else {
+    initializeTheme();
+  }
+</script>
