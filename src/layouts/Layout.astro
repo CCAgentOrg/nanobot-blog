@@ -1,386 +1,290 @@
 ---
-import '../styles/theme-system.css';
+import '../styles/global.css';
 import '../styles/tmux-theme.css';
-import TmuxStatusBar from '../components/TmuxStatusBar.astro';
-import ThemeToggle from '../components/ThemeToggle.astro';
-import DesignThemeSwitcher from '../components/DesignThemeSwitcher.astro';
+import '../styles/default-theme.css';
+
+import Navbar from '../components/Navbar.astro';
 import Sidebar from '../components/Sidebar.astro';
-import MobileDrawer from '../components/MobileDrawer.astro';
-import OptimizedHead from '../components/OptimizedHead.astro';
+import Footer from '../components/Footer.astro';
 import SkipToContent from '../components/SkipToContent.astro';
-import Analytics from '../components/Analytics.astro';
-import { getDesignTheme } from '../scripts/design-theme';
+import MobileDrawer from '../components/MobileDrawer.astro';
+import EasterEggs from '../components/EasterEggs.astro';
+import TerminalEasterEggs from '../components/TerminalEasterEggs.astro';
 
 interface Props {
-  title: string;
-  showSidebar?: boolean;
+  title?: string;
   description?: string;
   image?: string;
+  canonicalURL?: string;
+  type?: 'website' | 'article';
+  showSidebar?: boolean;
 }
 
-const { title, showSidebar = true, description = "Nanobot Bytes - Projects and tools built with nanobot AI assistant", image = "https://nanobot.srik.me/og-image.svg" } = Astro.props;
+const {
+  title = 'Nanobot Bytes',
+  description = 'Experiments with nanobot AI assistant',
+  image = '/og-image.png',
+  canonicalURL = new URL(Astro.url.pathname, Astro.site).href,
+  type = 'website',
+  showSidebar = true,
+} = Astro.props;
 
-// Get saved design theme (default to tmux)
-const designTheme = 'tmux';
-
-// Fetch all posts once (Astro best practice)
-const { getCollection } = await import('astro:content');
-const allPosts = await getCollection('blog');
-const recentPosts = allPosts
-  .filter(post => !post.data.draft)
-  .sort((a, b) => b.data.publishDate.valueOf() - a.data.publishDate.valueOf())
-  .slice(0, 5)
-  .map(post => ({
-    slug: post.slug,
-    data: {
-      title: post.data.title,
-      pubDate: post.data.publishDate
-    }
-  }));
+const ogImage = new URL(image, Astro.site).href;
+const siteName = 'Nanobot Bytes';
+const publishedDate = type === 'article' ? new Date().toISOString() : undefined;
+const modifiedDate = new Date().toISOString();
 ---
 
-<!doctype html
-  lang="en"
-  data-theme={designTheme}
->
-    <!-- Skip to Content Link (Accessibility) -->
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="generator" content={Astro.generator} />
+
+    <!-- SEO -->
+    <link rel="canonical" href={canonicalURL} />
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#1e1e1e" />
+    <meta name="color-scheme" content="dark light" />
+
+    <!-- Open Graph -->
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:url" content={canonicalURL} />
+    <meta property="og:type" content={type} />
+    <meta property="og:site_name" content={siteName} />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+
+    <!-- RSS Auto-Discovery -->
+    <link rel="alternate" type="application/rss+xml" title={siteName} href="/rss.xml" />
+
+    <!-- JSON-LD: BlogPosting or WebSite -->
+    <script type="application/ld+json" is:inline set:html={JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": type === 'article' ? "BlogPosting" : "WebSite",
+      "headline": title,
+      "description": description,
+      "image": ogImage,
+      "url": canonicalURL,
+      "name": type === 'article' ? title : siteName,
+      "author": {
+        "@type": "Organization",
+        "name": "Nanobot Bytes",
+        "url": "https://github.com/CCAgentOrg/nanobot-blog"
+      },
+      ...(type === 'article' && {
+        "datePublished": publishedDate,
+        "dateModified": modifiedDate,
+        "mainEntityOfPage": {
+          "@type": "WebPage",
+          "@id": canonicalURL
+        }
+      })
+    })} />
+
+    <title>{title} | {siteName}</title>
+  </head>
+
+  <body>
     <SkipToContent />
 
-    <!-- Tmux Status Bar Header -->
-    <TmuxStatusBar />
+    <!-- Theme Toggle (set via localStorage) -->
+    <script is:inline>
+      (function() {
+        try {
+          const savedTheme = localStorage.getItem('theme');
+          const savedMode = localStorage.getItem('mode');
 
-    <!-- Mobile Drawer (for mobile devices) -->
+          if (savedTheme === 'tmux' || savedTheme === 'normal') {
+            document.documentElement.setAttribute('data-theme', savedTheme);
+          }
+          if (savedMode === 'light' || savedMode === 'dark') {
+            document.documentElement.setAttribute('data-mode', savedMode);
+          }
+        } catch (e) {
+          console.error('[theme] Failed to load theme:', e);
+        }
+      })();
+    </script>
+
+    <!-- Mobile Drawer -->
     <MobileDrawer />
 
-    <!-- Main Content Area -->
-    <div class="tmux-container">
-      <div class="tmux-layout">
-        <main class="tmux-main" id="main-content" role="main">
-          <slot />
-        </main>
+    <!-- Mobile Drawer -->
+    <slot name="drawer" />
 
-        {showSidebar && (
-          <aside class="tmux-sidebar">
-            <div class="theme-controls">
-              <div class="theme-control-section">
-                <span class="theme-control-label">Design</span>
-                <DesignThemeSwitcher />
-              </div>
-              <div class="theme-control-section">
-                <span class="theme-control-label">Mode</span>
-                <ThemeToggle />
-              </div>
-            </div>
-            <Sidebar />
-          </aside>
-        )}
+    <!-- Main Content -->
+    <main id="main-content" class={`layout ${showSidebar ? 'with-sidebar' : 'full-width'}`}>
+      <div class="content-wrapper">
+        <Navbar />
+        <div class="main-layout">
+          <div class="content-area">
+            <slot />
+          </div>
+          {showSidebar && <Sidebar />}
+        </div>
+        <Footer />
       </div>
-    </div>
+    </main>
 
-    <!-- Footer -->
-    <footer class="tmux-footer">
-      <p>&copy; {new Date().getFullYear()} Nanobot Bytes</p>
-      <p class="tmux-footer-meta">
-        <span class="tmux-prompt-symbol">$</span>
-        <span class="text-mono text-muted">echo "Built with Astro & GLM"</span>
-      </p>
+    <!-- Easter Eggs -->
+    <EasterEggs />
+    <TerminalEasterEggs />
 
-      <!-- ASCII Art Easter Egg -->
-      <div class="ascii-art">
-    ╭─────────────────────────────────────────────────╮
-    │  ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄  │
-    │  █ ▄▄▄▄▄ █▀█ █▄█ █▀▀ █▀▀ █   ▄▄ █▀▄ ▄▀▄ █ █  │
-    │  █ █   █ █▀▀ ▀█▀ █   █   █   █▀▄ █▀▄ █▀█ ▀▄▀  │
-    │  █ █▄▄▄█ █   ▀ ▀ ▀▀▀ ▀▀▀ ▀▀▀ ▄▄█ █▀  ▀▄▀ █ █  │
-    │  █▄▄▄▄▄▄▄█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█  │
-    │  [session: nanobytes] [window: main]            │
-    ╰─────────────────────────────────────────────────╯
-      </div>
-    </footer>
+    <!-- ASCII Art Footer (only on homepage) -->
+    {canonicalURL === 'https://nanobot.srik.me/' && (
+      <script is:inline>
+        (function() {
+          if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', addFooterASCII);
+          } else {
+            addFooterASCII();
+          }
 
-    <!-- Terminal Scripts -->
-    <script is:inline src="/scripts/typing-effect.js"></script>
-    <script is:inline src="/scripts/konami-code.js"></script>
-    <script is:inline src="/scripts/human-typing.ts"></script>
-    <script is:inline src="/scripts/design-theme.js"></script>
-    <script is:inline src="/scripts/theme-toggle.js"></script>
+          function addFooterASCII() {
+            const footer = document.querySelector('footer');
+            if (footer) {
+              const ascii = document.createElement('pre');
+              ascii.className = 'footer-ascii';
+              ascii.textContent = `
+  ┌────────────────────────────────────────────┐
+  │  powered by nanobot • z.ai GLM 4.7         │
+  │  [session: nanobytes] [window: ${new Date().toISOString().slice(5, 10)}]     │
+  └────────────────────────────────────────────┘
+              `.trim();
+              footer.appendChild(ascii);
+            }
+          }
+        })();
+      </script>
+    )}
 
     <!-- Analytics -->
-    <Analytics />
+    <script is:inline>
+      (function() {
+        // Google Analytics
+        if ('GA_MEASUREMENT_ID' in window) {
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', window.GA_MEASUREMENT_ID);
+        }
+
+        // Plausible Analytics
+        if ('PLAUSIBLE_DOMAIN' in window) {
+          const script = document.createElement('script');
+          script.defer = true;
+          script.dataset.domain = window.PLAUSIBLE_DOMAIN;
+          script.src = 'https://plausible.io/js/script.js';
+          document.head.appendChild(script);
+        }
+
+        // Custom Event Tracking
+        if (window.trackEvent) {
+          // Track theme switches
+          document.addEventListener('theme-change', (e) => {
+            window.trackEvent('theme_switch', {
+              theme: e.detail.theme,
+              mode: e.detail.mode
+            });
+          });
+        }
+      })();
+    </script>
+
+    <!-- Web Vitals -->
+    <script src="https://unpkg.com/web-vitals@3.5.2/dist/web-vitals.iife.js"></script>
+    <script is:inline>
+      (function() {
+        if (typeof webVitals !== 'undefined') {
+          webVitals.onCLS(console.log);
+          webVitals.onFID(console.log);
+          webVitals.onLCP(console.log);
+          webVitals.onTTFB(console.log);
+          webVitals.onFCP(console.log);
+          webVitals.onINP(console.log);
+        }
+      })();
+    </script>
+
+    <style>
+      .layout {
+        min-height: 100vh;
+      }
+
+      .content-wrapper {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+      }
+
+      .main-layout {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 2rem;
+        flex: 1;
+      }
+
+      @media (min-width: 1024px) {
+        .layout.with-sidebar .main-layout {
+          grid-template-columns: 1fr 320px;
+        }
+      }
+
+      .content-area {
+        max-width: 100%;
+      }
+
+      .full-width .main-layout {
+        grid-template-columns: 1fr;
+        max-width: 800px;
+        margin: 0 auto;
+      }
+
+      .skip-to-content {
+        position: absolute;
+        top: -40px;
+        left: 0;
+        background: #569cd6;
+        color: white;
+        padding: 8px 16px;
+        z-index: 100;
+        text-decoration: none;
+        font-weight: bold;
+      }
+
+      .skip-to-content:focus {
+        top: 0;
+      }
+
+      .footer-ascii {
+        font-family: 'Courier New', monospace;
+        font-size: 10px;
+        line-height: 1.2;
+        color: var(--border-color);
+        text-align: center;
+        margin-top: 2rem;
+        padding: 1rem;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        background: var(--code-background);
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+    </style>
   </body>
 </html>
-
-<style is:global>
-  /* Base body styles */
-  body {
-    margin: 0;
-    padding: 0;
-    line-height: 1.6;
-    background-color: var(--tmux-bg-primary);
-    color: var(--tmux-text-primary);
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-    transition: background-color 0.3s ease, color 0.3s ease;
-  }
-
-  /* Container for main content */
-  .tmux-container {
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 2rem 1rem;
-  }
-
-  /* Layout grid */
-  .tmux-layout {
-    display: grid;
-    gap: 2rem;
-    grid-template-columns: 1fr;
-  }
-
-  /* Main content area */
-  .tmux-main {
-    min-width: 0;
-  }
-
-  /* Sidebar area */
-  .tmux-sidebar {
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-  }
-
-  /* Theme controls container */
-  .theme-controls {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    padding: 1rem;
-    background-color: var(--bg-secondary);
-    border-radius: 0.5rem;
-    border: 1px solid var(--border-color);
-  }
-
-  /* Theme control sections */
-  .theme-control-section {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-
-  /* Theme control labels */
-  .theme-control-label {
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    font-weight: 600;
-    color: var(--text-secondary);
-  }
-
-  /* Tmux theme overrides */
-  [data-theme="tmux"] .theme-controls {
-    background-color: var(--tmux-bg-secondary);
-    border: 1px solid var(--tmux-border-color);
-    border-radius: 0;
-  }
-
-  [data-theme="tmux"] .theme-control-label {
-    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
-    text-transform: uppercase;
-    color: var(--tmux-text-secondary);
-  }
-
-  /* Desktop: 2-column layout */
-  @media (min-width: 992px) {
-    .tmux-layout {
-      grid-template-columns: 1fr 320px;
-    }
-
-    .tmux-sidebar {
-      position: sticky;
-      top: 5rem;
-      height: fit-content;
-      max-height: calc(100vh - 6rem);
-      overflow-y: auto;
-    }
-  }
-
-  /* Tablet: Smaller gap */
-  @media (min-width: 768px) and (max-width: 991px) {
-    .tmux-layout {
-      grid-template-columns: 1fr 280px;
-    }
-  }
-
-  /* Mobile: Stack sidebar below content */
-  @media (max-width: 767px) {
-    .tmux-container {
-      padding: 1rem;
-    }
-
-    .tmux-layout {
-      grid-template-columns: 1fr;
-      gap: 1.5rem;
-    }
-
-    .tmux-sidebar {
-      order: 2;
-    }
-
-    .tmux-main {
-      order: 1;
-    }
-  }
-
-  /* Footer styles */
-  .tmux-footer {
-    border-top: 1px solid var(--tmux-border-color);
-    padding: 2rem 1rem;
-    text-align: center;
-    margin-top: 3rem;
-    background-color: var(--tmux-bg-secondary);
-  }
-
-  .tmux-footer p {
-    margin: 0.5rem 0;
-  }
-
-  .tmux-footer-meta {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
-    font-size: 0.85rem;
-  }
-
-  /* Typography enhancements */
-  h1, h2, h3, h4, h5, h6 {
-    font-weight: 600;
-    line-height: 1.3;
-    margin-top: 1.5em;
-    margin-bottom: 0.5em;
-    color: var(--tmux-text-primary);
-  }
-
-  h1 {
-    font-size: 2.5rem;
-    border-bottom: 2px solid var(--tmux-accent-secondary);
-    padding-bottom: 0.5rem;
-    margin-top: 0;
-  }
-
-  h2 {
-    font-size: 2rem;
-    border-bottom: 1px solid var(--tmux-border-color);
-    padding-bottom: 0.3rem;
-  }
-
-  h3 {
-    font-size: 1.5rem;
-  }
-
-  h4 {
-    font-size: 1.25rem;
-  }
-
-  p {
-    margin-bottom: 1rem;
-  }
-
-  /* Link styles */
-  a {
-    color: var(--tmux-accent-primary);
-    text-decoration: none;
-    transition: color 0.2s ease;
-  }
-
-  a:hover {
-    color: var(--tmux-accent-secondary);
-    text-decoration: underline;
-  }
-
-  /* Blockquote styles */
-  blockquote {
-    border-left: 4px solid var(--tmux-accent-secondary);
-    padding-left: 1rem;
-    margin: 1.5rem 0;
-    color: var(--tmux-text-secondary);
-    font-style: italic;
-    background-color: var(--tmux-bg-secondary);
-    padding: 1rem;
-    border-radius: 0 4px 4px 0;
-  }
-
-  /* Horizontal rule */
-  hr {
-    border: none;
-    border-top: 1px solid var(--tmux-border-color);
-    margin: 2rem 0;
-  }
-
-  /* List styles */
-  ul, ol {
-    padding-left: 2rem;
-    margin-bottom: 1rem;
-  }
-
-  li {
-    margin-bottom: 0.5rem;
-  }
-
-  /* Table styles */
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 1.5rem 0;
-    font-size: 0.9rem;
-  }
-
-  table th,
-  table td {
-    padding: 0.75rem 1rem;
-    text-align: left;
-    border: 1px solid var(--tmux-border-color);
-  }
-
-  table th {
-    background-color: var(--tmux-bg-secondary);
-    font-weight: 600;
-    color: var(--tmux-text-primary);
-  }
-
-  table tr:hover {
-    background-color: var(--tmux-bg-tertiary);
-  }
-
-  /* Code block enhancements */
-  pre {
-    background-color: var(--tmux-bg-secondary) !important;
-    border: 1px solid var(--tmux-border-color) !important;
-    border-radius: 6px !important;
-    padding: 1rem !important;
-    overflow-x: auto !important;
-    margin: 1.5rem 0 !important;
-  }
-
-  pre code {
-    background: none !important;
-    padding: 0 !important;
-    font-size: 0.9rem !important;
-    line-height: 1.6 !important;
-  }
-
-  /* Inline code */
-  code:not(pre code) {
-    background-color: var(--tmux-bg-tertiary) !important;
-    color: var(--tmux-accent-primary) !important;
-    padding: 0.2em 0.4em !important;
-    border-radius: 3px !important;
-    font-size: 0.9em !important;
-  }
-
-  /* Smooth scrolling */
-  html {
-    scroll-behavior: smooth;
-  }
-</style>

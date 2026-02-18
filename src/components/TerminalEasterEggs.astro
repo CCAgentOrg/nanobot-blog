@@ -1,0 +1,59 @@
+---
+/**
+ * Terminal Easter Eggs
+ * Playful terminal messages and jokes
+ */
+---
+
+<script>
+  // Type declarations for window extensions
+  declare global {
+    interface Window {
+      sudo: any;
+      nanobot: {
+        name: string;
+        version: string;
+        theme: string;
+        powered: string;
+        github: string;
+        status: string;
+      };
+    }
+  }
+
+  // Add playful console messages on page load
+  const messages = [
+    '%c🚀 Welcome to nanobytes!',
+    '%c[system] Terminal loaded successfully',
+    '%c[note] Try typing the Konami code: ↑↑↓↓←→←→BA',
+    '%c[fun] sudo make me a sandwich... Permission denied',
+    '%c[tip] You can switch themes using the sidebar',
+    '%c[status] All systems nominal',
+  ];
+
+  const colors = ['#4ec9b0', '#569cd6', '#6a9955', '#ce9178', '#4ec9b0', '#6a9955'];
+
+  messages.forEach((msg, i) => {
+    console.log(msg, `color: ${colors[i % colors.length]}; font-weight: bold;`);
+  });
+
+  // Easter egg: Typing "sudo" in console shows a message
+  (window as any).sudo = new Proxy({}, {
+    get() {
+      console.log('%c[sudo] Permission denied. Nice try! 😄', 'color: #ce9178; font-weight: bold;');
+      return (window as any).sudo;
+    }
+  });
+
+  // Easter egg: Typing "nanobot" shows info
+  (window as any).nanobot = {
+    name: 'nanobot',
+    version: '2.0.0',
+    theme: 'tmux',
+    powered: 'z.ai GLM',
+    github: 'https://github.com/CCAgentOrg/nanobot-blog',
+    status: 'operational',
+  };
+
+  console.log('%c[nanobot] Type "nanobot" for system info', 'color: #4ec9b0; font-weight: bold;');
+</script>
