@@ -6,6 +6,7 @@ import Sidebar from '../components/Sidebar.astro';
 import MobileDrawer from '../components/MobileDrawer.astro';
 import OptimizedHead from '../components/OptimizedHead.astro';
 import SkipToContent from '../components/SkipToContent.astro';
+import Analytics from '../components/Analytics.astro';
 
 interface Props {
   title: string;
@@ -88,6 +89,9 @@ const recentPosts = allPosts
     <script src="/scripts/typing-effect.js"></script>
     <script src="/scripts/konami-code.js"></script>
     <script src="/scripts/human-typing.js"></script>
+
+    <!-- Analytics -->
+    <Analytics />
   </body>
 </html>
 
