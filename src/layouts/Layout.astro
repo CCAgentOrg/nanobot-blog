@@ -5,6 +5,7 @@ import ThemeToggle from '../components/ThemeToggle.astro';
 import Sidebar from '../components/Sidebar.astro';
 import MobileDrawer from '../components/MobileDrawer.astro';
 import OptimizedHead from '../components/OptimizedHead.astro';
+import SkipToContent from '../components/SkipToContent.astro';
 
 interface Props {
   title: string;
@@ -37,6 +38,9 @@ const recentPosts = allPosts
     <OptimizedHead title={title} description={description} image={image} />
   </head>
   <body>
+    <!-- Skip to Content Link (Accessibility) -->
+    <SkipToContent />
+
     <!-- Tmux Status Bar Header -->
     <TmuxStatusBar />
 
@@ -46,7 +50,7 @@ const recentPosts = allPosts
     <!-- Main Content Area -->
     <div class="tmux-container">
       <div class="tmux-layout">
-        <main class="tmux-main">
+        <main class="tmux-main" id="main-content" role="main">
           <slot />
         </main>
 
