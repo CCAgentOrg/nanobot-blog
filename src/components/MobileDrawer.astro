@@ -1,0 +1,122 @@
+---
+/**
+ * Mobile Drawer Component
+ * Slide-out sidebar for mobile devices with terminal styling
+ */
+
+const showThemeToggle = true;
+---
+
+<aside id="mobile-drawer" class="mobile-drawer">
+  <div class="mobile-drawer-header">
+    <h3>
+      <span class="tmux-prompt-symbol">$</span> nanobytes
+    </h3>
+    <button id="mobile-drawer-close" class="mobile-drawer-close" aria-label="Close drawer">
+      ×
+    </button>
+  </div>
+
+  {showThemeToggle && (
+    <div class="mobile-drawer-section">
+      <ThemeToggle />
+    </div>
+  )}
+
+  <div class="mobile-drawer-section">
+    <Sidebar />
+  </div>
+</aside>
+
+<div id="mobile-drawer-overlay" class="mobile-drawer-overlay"></div>
+
+<button
+  id="mobile-menu-toggle"
+  class="mobile-menu-toggle"
+  aria-label="Toggle menu"
+>
+  ☰
+</button>
+
+<script>
+  const drawer = document.getElementById('mobile-drawer');
+  const drawerOverlay = document.getElementById('mobile-drawer-overlay');
+  const menuToggle = document.getElementById('mobile-menu-toggle');
+  const drawerClose = document.getElementById('mobile-drawer-close');
+
+  function openDrawer() {
+    drawer.classList.add('open');
+    drawerOverlay.classList.add('open');
+    menuToggle.classList.add('active');
+    menuToggle.textContent = '✕';
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeDrawer() {
+    drawer.classList.remove('open');
+    drawerOverlay.classList.remove('open');
+    menuToggle.classList.remove('active');
+    menuToggle.textContent = '☰';
+    document.body.style.overflow = '';
+  }
+
+  menuToggle.addEventListener('click', () => {
+    if (drawer.classList.contains('open')) {
+      closeDrawer();
+    } else {
+      openDrawer();
+    }
+  });
+
+  drawerClose.addEventListener('click', closeDrawer);
+  drawerOverlay.addEventListener('click', closeDrawer);
+
+  // Close drawer on escape key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && drawer.classList.contains('open')) {
+      closeDrawer();
+    }
+  });
+</script>
+
+<style>
+  .mobile-drawer-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--tmux-border-color);
+    margin-bottom: 1.5rem;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  }
+
+  .mobile-drawer-header h3 {
+    margin: 0;
+    font-size: 1rem;
+    color: var(--tmux-accent-primary);
+  }
+
+  .mobile-drawer-close {
+    background: transparent;
+    border: none;
+    color: var(--tmux-text-muted);
+    font-size: 2rem;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0;
+    width: 2rem;
+    height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s ease;
+  }
+
+  .mobile-drawer-close:hover {
+    color: var(--tmux-accent-danger);
+  }
+
+  .mobile-drawer-section {
+    margin-bottom: 2rem;
+  }
+</style>
