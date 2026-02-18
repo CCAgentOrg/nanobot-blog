@@ -7,73 +7,107 @@ const { currentTitle } = Astro.props;
 ---
 
 <nav class="breadcrumbs" aria-label="Breadcrumb">
-  <ol class="breadcrumbs-list" itemscope itemtype="https://schema.org/BreadcrumbList">
-    <li class="breadcrumb-item" itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
-      <a href="/" class="breadcrumb-link" itemprop="item">
-        <span itemprop="name">Home</span>
-      </a>
-      <meta itemprop="position" content="1" />
-    </li>
-    <li class="breadcrumb-separator">›</li>
-    <li class="breadcrumb-item" itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
-      <a href="/blog" class="breadcrumb-link" itemprop="item">
-        <span itemprop="name">Blog</span>
-      </a>
-      <meta itemprop="position" content="2" />
-    </li>
-    <li class="breadcrumb-separator">›</li>
-    <li class="breadcrumb-item breadcrumb-current" itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
-      <span itemprop="name">{currentTitle}</span>
-      <meta itemprop="position" content="3" />
-    </li>
-  </ol>
+  <div class="tmux-prompt breadcrumbs-prompt">
+    <span class="tmux-prompt-symbol">$</span>
+    <span class="breadcrumbs-path">
+      <span class="breadcrumb-segment">
+        <a href="/">home</a>
+      </span>
+      <span class="breadcrumb-separator">/</span>
+      <span class="breadcrumb-segment">
+        <a href="/blog">blog</a>
+      </span>
+      <span class="breadcrumb-separator">/</span>
+      <span class="breadcrumb-segment breadcrumb-current">
+        {currentTitle}
+      </span>
+    </span>
+  </div>
 </nav>
+
+<!-- JSON-LD for Breadcrumbs -->
+<script type="application/ld+json" set:html={JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://nanobot.srik.me/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Blog",
+      "item": "https://nanobot.srik.me/blog"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": currentTitle,
+      "item": Astro.url.href
+    }
+  ]
+})} />
 
 <style>
   .breadcrumbs {
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
   }
 
-  .breadcrumbs-list {
+  .tmux-prompt {
+    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
     display: flex;
     align-items: center;
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    font-size: 0.875rem;
-    color: #6b7280;
+    gap: 0.5rem;
+    font-size: 0.85rem;
   }
 
-  .breadcrumb-item {
+  .tmux-prompt-symbol {
+    color: var(--tmux-accent-success);
+    font-weight: bold;
+  }
+
+  .breadcrumbs-path {
     display: flex;
     align-items: center;
+    gap: 0.3rem;
+    color: var(--tmux-text-secondary);
   }
 
-  .breadcrumb-link {
-    color: #2563eb;
+  .breadcrumb-segment {
+    color: var(--tmux-accent-primary);
+  }
+
+  .breadcrumb-segment a {
+    color: var(--tmux-accent-primary);
     text-decoration: none;
     transition: color 0.2s ease;
   }
 
-  .breadcrumb-link:hover {
-    color: #1d4ed8;
+  .breadcrumb-segment a:hover {
+    color: var(--tmux-accent-secondary);
     text-decoration: underline;
   }
 
   .breadcrumb-current {
-    color: #1a1a1a;
+    color: var(--tmux-text-primary);
     font-weight: 500;
   }
 
   .breadcrumb-separator {
-    margin: 0 0.5rem;
-    color: #d1d5db;
+    color: var(--tmux-text-muted);
   }
 
   /* Mobile optimization */
   @media (max-width: 767px) {
-    .breadcrumbs-list {
-      font-size: 0.8rem;
+    .tmux-prompt {
+      font-size: 0.75rem;
+    }
+
+    .breadcrumbs-path {
+      flex-wrap: wrap;
     }
   }
 </style>

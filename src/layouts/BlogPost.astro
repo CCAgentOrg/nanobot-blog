@@ -32,15 +32,45 @@ const readingTime = calculateReadingTime();
   <meta name="author" content="nanobot" />
   <meta name="article:author" content="nanobot" />
 
-  <article>
-    <Breadcrumbs currentTitle={title} />
+  <article class="blog-post">
+    <div class="blog-post-header tmux-window">
+      <div class="tmux-window-header">
+        <div class="tmux-window-title">
+          <span>📄 [blog-post]</span>
+        </div>
+        <div class="tmux-window-controls">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+      </div>
+      <div class="tmux-window-body">
+        <Breadcrumbs currentTitle={title} />
 
-    <header>
-      <h1>{title}</h1>
-      <p class="date">Published on {formatDate(publishDate)} • {readingTime} min read</p>
-      {description && <p class="description">{description}</p>}
-    </header>
-    <slot />
+        <h1>{title}</h1>
+
+        <div class="blog-post-meta">
+          <div class="tmux-prompt">
+            <span class="tmux-prompt-symbol">$</span>
+            <span class="tmux-prompt-text">published: {formatDate(publishDate)}</span>
+          </div>
+          <div class="tmux-prompt">
+            <span class="tmux-prompt-symbol">$</span>
+            <span class="tmux-prompt-text">reading-time: {readingTime} min</span>
+          </div>
+        </div>
+
+        {description && (
+          <div class="blog-post-description">
+            <p>{description}</p>
+          </div>
+        )}
+      </div>
+    </div>
+
+    <div class="blog-post-content">
+      <slot />
+    </div>
 
     <!-- Enhanced JSON-LD Structured Data for SEO -->
     <script type="application/ld+json" is:inline set:html={JSON.stringify({
@@ -73,56 +103,203 @@ const readingTime = calculateReadingTime();
 </Layout>
 
 <style>
-  article {
-    max-width: 700px;
+  .blog-post {
+    max-width: 100%;
   }
 
-  h1 {
-    font-size: 2.5rem;
-    margin-bottom: 0.5rem;
+  .blog-post-header {
+    margin-bottom: 2rem;
   }
 
-  .date {
-    color: #666;
+  .blog-post-header h1 {
+    margin: 1rem 0 0.5rem 0;
+    font-size: 2.25rem;
+    color: var(--tmux-accent-primary);
+    border-bottom: 2px solid var(--tmux-accent-secondary);
+    padding-bottom: 0.5rem;
+  }
+
+  .blog-post-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 1rem;
+  }
+
+  .tmux-prompt {
+    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
     font-size: 0.9rem;
-    margin-top: 0;
   }
 
-  .description {
-    font-size: 1.2rem;
-    color: #555;
-    margin: 1.5rem 0;
+  .tmux-prompt-symbol {
+    color: var(--tmux-accent-success);
+    font-weight: bold;
   }
 
-  :global(prose) {
+  .tmux-prompt-text {
+    color: var(--tmux-text-secondary);
+  }
+
+  .blog-post-description {
+    margin-top: 1rem;
+    padding: 1rem;
+    background-color: var(--tmux-bg-secondary);
+    border-left: 3px solid var(--tmux-accent-secondary);
+    border-radius: 0 4px 4px 0;
+  }
+
+  .blog-post-description p {
+    margin: 0;
+    font-size: 1.1rem;
+    color: var(--tmux-text-secondary);
+    font-style: italic;
+  }
+
+  .blog-post-content {
     line-height: 1.8;
   }
 
-  :global(h2) {
+  /* Content styling enhancements */
+  .blog-post-content h2 {
+    margin-top: 2.5rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--tmux-border-color);
+    color: var(--tmux-text-primary);
+  }
+
+  .blog-post-content h3 {
     margin-top: 2rem;
+    margin-bottom: 0.75rem;
+    color: var(--tmux-text-primary);
   }
 
-  :global(p) {
-    margin: 1rem 0;
+  .blog-post-content p {
+    margin-bottom: 1.25rem;
+    color: var(--tmux-text-primary);
   }
 
-  :global(code) {
-    background: #f4f4f4;
-    padding: 0.2rem 0.4rem;
-    border-radius: 3px;
-    font-family: 'Courier New', monospace;
+  .blog-post-content blockquote {
+    border-left: 4px solid var(--tmux-accent-secondary);
+    padding: 1rem 1.5rem;
+    margin: 1.5rem 0;
+    background-color: var(--tmux-bg-secondary);
+    color: var(--tmux-text-secondary);
+    font-style: italic;
+    border-radius: 0 4px 4px 0;
   }
 
-  :global(pre) {
-    background: #1a1a1a;
-    color: #fff;
-    padding: 1rem;
-    border-radius: 5px;
-    overflow-x: auto;
+  .blog-post-content blockquote p {
+    margin: 0;
   }
 
-  :global(pre code) {
-    background: none;
-    padding: 0;
+  /* Code blocks with terminal styling */
+  .blog-post-content pre {
+    background-color: var(--tmux-bg-secondary) !important;
+    border: 1px solid var(--tmux-border-color) !important;
+    border-radius: 6px !important;
+    padding: 1rem !important;
+    overflow-x: auto !important;
+    margin: 1.5rem 0 !important;
+    position: relative;
+  }
+
+  .blog-post-content pre::before {
+    content: '──────';
+    display: block;
+    color: var(--tmux-text-muted);
+    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.8rem;
+    margin-bottom: 0.5rem;
+    opacity: 0.5;
+  }
+
+  .blog-post-content pre code {
+    background: none !important;
+    padding: 0 !important;
+    font-size: 0.9rem !important;
+    line-height: 1.6 !important;
+    color: var(--tmux-text-primary) !important;
+  }
+
+  /* Inline code */
+  .blog-post-content code:not(pre code) {
+    background-color: var(--tmux-bg-tertiary) !important;
+    color: var(--tmux-accent-primary) !important;
+    padding: 0.2em 0.4em !important;
+    border-radius: 3px !important;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace !important;
+    font-size: 0.9em !important;
+  }
+
+  /* Lists */
+  .blog-post-content ul,
+  .blog-post-content ol {
+    padding-left: 2rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .blog-post-content li {
+    margin-bottom: 0.5rem;
+    color: var(--tmux-text-primary);
+  }
+
+  /* Tables */
+  .blog-post-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.5rem 0;
+    font-size: 0.9rem;
+    border: 1px solid var(--tmux-border-color);
+  }
+
+  .blog-post-content table th,
+  .blog-post-content table td {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    border: 1px solid var(--tmux-border-color);
+  }
+
+  .blog-post-content table th {
+    background-color: var(--tmux-bg-secondary);
+    font-weight: 600;
+    color: var(--tmux-text-primary);
+  }
+
+  .blog-post-content table tr:hover {
+    background-color: var(--tmux-bg-tertiary);
+  }
+
+  /* Horizontal rule */
+  .blog-post-content hr {
+    border: none;
+    border-top: 1px solid var(--tmux-border-color);
+    margin: 2rem 0;
+  }
+
+  /* Links */
+  .blog-post-content a {
+    color: var(--tmux-accent-primary);
+    text-decoration: none;
+    transition: color 0.2s ease;
+  }
+
+  .blog-post-content a:hover {
+    color: var(--tmux-accent-secondary);
+    text-decoration: underline;
+  }
+
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .blog-post-header h1 {
+      font-size: 1.75rem;
+    }
+
+    .blog-post-content h2 {
+      font-size: 1.5rem;
+    }
   }
 </style>

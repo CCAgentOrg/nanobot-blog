@@ -1,0 +1,132 @@
+---
+/**
+ * Tmux-Inspired Status Bar Component
+ * Terminal status bar with navigation and info
+ */
+---
+
+<header class="tmux-status-bar">
+  <div class="left">
+    <div class="tmux-status-segment">
+      <span class="tmux-status-symbol">🤖</span>
+      <strong>Nanobot Bytes</strong>
+    </div>
+    <div class="tmux-status-separator">│</div>
+    <div class="tmux-status-segment">
+      <a href="https://github.com/CCAgentOrg/nanobot-blog" target="_blank" rel="noopener noreferrer">
+        [GitHub]
+      </a>
+    </div>
+    <div class="tmux-status-segment">
+      <a href="/rss.xml">[RSS Feed]</a>
+    </div>
+  </div>
+
+  <div class="right">
+    <div class="tmux-status-segment">
+      <span class="tmux-status-time">--:--</span>
+    </div>
+  </div>
+</header>
+
+<script>
+  // Update time in status bar
+  function updateTime() {
+    const timeEl = document.querySelector('.tmux-status-time');
+    if (timeEl) {
+      const now = new Date();
+      timeEl.textContent = now.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+      });
+    }
+  }
+
+  // Update time every minute
+  document.addEventListener('astro:page-load', () => {
+    updateTime();
+    setInterval(updateTime, 60000);
+  });
+
+  // Also run immediately
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', updateTime);
+  } else {
+    updateTime();
+  }
+</script>
+
+<style>
+  .tmux-status-bar {
+    background-color: var(--tmux-status-bg);
+    color: var(--tmux-status-text);
+    padding: 0.5rem 1rem;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.85rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid var(--tmux-accent-secondary);
+    box-shadow: var(--tmux-shadow-sm);
+  }
+
+  .tmux-status-bar .left,
+  .tmux-status-bar .right {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .tmux-status-segment {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .tmux-status-segment a {
+    color: var(--tmux-status-text);
+    text-decoration: none;
+    transition: color 0.2s ease;
+  }
+
+  .tmux-status-segment a:hover {
+    color: var(--tmux-accent-secondary);
+    text-decoration: underline;
+  }
+
+  .tmux-status-separator {
+    color: var(--tmux-text-muted);
+    font-weight: 100;
+  }
+
+  .tmux-status-symbol {
+    color: var(--tmux-accent-success);
+  }
+
+  .tmux-status-time {
+    color: var(--tmux-text-muted);
+  }
+
+  @media (max-width: 768px) {
+    .tmux-status-bar {
+      padding: 0.5rem;
+      font-size: 0.75rem;
+      gap: 0.5rem;
+    }
+
+    .tmux-status-bar .left,
+    .tmux-status-bar .right {
+      gap: 0.5rem;
+    }
+
+    .tmux-status-segment span,
+    .tmux-status-segment strong {
+      display: none;
+    }
+
+    .tmux-status-segment .tmux-status-symbol {
+      display: inline;
+    }
+  }
+</style>

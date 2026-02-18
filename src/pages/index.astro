@@ -4,7 +4,7 @@ import Layout from '../layouts/Layout.astro';
 const formatDate = (date: Date) =>
   date.toLocaleDateString('en-US', {
     year: 'numeric',
-    month: 'long',
+    month: 'short',
     day: 'numeric',
   });
 
@@ -22,30 +22,82 @@ const posts = allPosts
 ---
 
 <Layout title="Home">
-  <section>
-    <h1>Experiments with nanobot</h1>
-    <p>
-      A blog documenting experiments, insights, and learnings from building
-      and using nanobot — an AI assistant built with Python.
-    </p>
+  <section class="hero-section">
+    <div class="tmux-window">
+      <div class="tmux-window-header">
+        <div class="tmux-window-title">
+          <span>🤖 [nanobot@bytes:~]</span>
+        </div>
+        <div class="tmux-window-controls">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+      </div>
+      <div class="tmux-window-body">
+        <div class="tmux-prompt hero-prompt">
+          <span class="tmux-prompt-symbol">$</span>
+          <span class="tmux-prompt-text">cat welcome.md</span>
+        </div>
+
+        <h1 class="hero-title">Experiments with nanobot</h1>
+        <p class="hero-description">
+          A blog documenting experiments, insights, and learnings from building
+          and using nanobot — an AI assistant built with Python.
+        </p>
+
+        <div class="tmux-prompt hero-prompt">
+          <span class="tmux-prompt-symbol">$</span>
+          <span class="tmux-prompt-text">ls -la ./blog</span>
+        </div>
+      </div>
+    </div>
   </section>
 
-  <section>
-    <h2>Blog Posts</h2>
+  <section class="posts-section">
+    <h2 class="section-title">
+      <span class="tmux-prompt-symbol">#</span>
+      Blog Posts
+    </h2>
+
     {posts.length === 0 ? (
-      <p>No posts yet. Check back soon!</p>
+      <div class="tmux-window">
+        <div class="tmux-window-body">
+          <div class="tmux-prompt">
+            <span class="tmux-prompt-symbol">$</span>
+            <span class="tmux-prompt-text">echo "No posts yet. Check back soon!"</span>
+          </div>
+        </div>
+      </div>
     ) : (
-      <ul class="post-list">
-        {posts.map((post) => (
-          <li>
-            <a href={`/blog/${post.slug}/`}>
-              <h3>{post.data.title}</h3>
-              <p class="description">{post.data.description}</p>
-              <p class="date">{formatDate(post.data.publishDate)}</p>
-            </a>
-          </li>
+      <div class="posts-list">
+        {posts.map((post, index) => (
+          <article class="post-item tmux-window">
+            <div class="tmux-window-header">
+              <div class="tmux-window-title">
+                <span>📄 [{post.slug}.md]</span>
+              </div>
+            </div>
+            <div class="tmux-window-body">
+              <a href={`/blog/${post.slug}/`} class="post-link">
+                <div class="post-header">
+                  <span class="post-index">
+                    {String(index + 1).padStart(2, '0')}.
+                  </span>
+                  <h3 class="post-title">{post.data.title}</h3>
+                </div>
+                {post.data.description && (
+                  <p class="post-description">{post.data.description}</p>
+                )}
+                <div class="post-meta">
+                  <span class="tmux-prompt-symbol">$</span>
+                  <span class="post-date">date: {formatDate(post.data.publishDate)}</span>
+                </div>
+              </a>
+            </div>
+          </article>
         ))}
-      </ul>
+      </div>
     )}
   </section>
 
@@ -65,51 +117,139 @@ const posts = allPosts
 </Layout>
 
 <style>
-  h1 {
-    font-size: 2.5rem;
-    margin-bottom: 1rem;
-  }
-
-  section {
+  .hero-section {
     margin-bottom: 3rem;
   }
 
-  h2 {
-    border-bottom: 1px solid #e5e5e5;
+  .hero-title {
+    font-size: 2.25rem;
+    margin: 1rem 0;
+    color: var(--tmux-accent-primary);
+    border-bottom: 2px solid var(--tmux-accent-secondary);
     padding-bottom: 0.5rem;
   }
 
-  .post-list {
-    list-style: none;
-    padding: 0;
+  .hero-description {
+    font-size: 1.15rem;
+    color: var(--tmux-text-secondary);
+    line-height: 1.7;
+    margin-bottom: 1rem;
   }
 
-  .post-list li {
-    margin-bottom: 2rem;
+  .hero-prompt {
+    margin-bottom: 0.5rem;
   }
 
-  .post-list a {
+  .posts-section {
+    margin-top: 3rem;
+  }
+
+  .section-title {
+    font-size: 1.75rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--tmux-text-primary);
+  }
+
+  .section-title .tmux-prompt-symbol {
+    color: var(--tmux-accent-success);
+    font-weight: bold;
+  }
+
+  .posts-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .post-item {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .post-item:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--tmux-shadow-lg);
+  }
+
+  .post-link {
+    display: block;
     text-decoration: none;
     color: inherit;
-    display: block;
   }
 
-  .post-list a:hover h3 {
-    color: #2563eb;
+  .post-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
   }
 
-  .post-list h3 {
-    margin: 0 0 0.5rem 0;
+  .post-index {
+    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+    color: var(--tmux-accent-secondary);
+    font-weight: bold;
+    min-width: 2.5em;
   }
 
-  .post-list .description {
-    color: #555;
-    margin: 0.5rem 0;
-  }
-
-  .post-list .date {
-    color: #666;
-    font-size: 0.9rem;
+  .post-title {
     margin: 0;
+    font-size: 1.35rem;
+    color: var(--tmux-accent-primary);
+    transition: color 0.2s ease;
+  }
+
+  .post-link:hover .post-title {
+    color: var(--tmux-accent-secondary);
+  }
+
+  .post-description {
+    margin: 0.5rem 0 1rem 0;
+    color: var(--tmux-text-secondary);
+    line-height: 1.6;
+  }
+
+  .post-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.85rem;
+    color: var(--tmux-text-muted);
+  }
+
+  .post-date {
+    color: var(--tmux-text-muted);
+  }
+
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .hero-title {
+      font-size: 1.75rem;
+    }
+
+    .hero-description {
+      font-size: 1rem;
+    }
+
+    .section-title {
+      font-size: 1.5rem;
+    }
+
+    .post-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.25rem;
+    }
+
+    .post-index {
+      color: var(--tmux-text-muted);
+      font-size: 0.8rem;
+    }
+
+    .post-title {
+      font-size: 1.15rem;
+    }
   }
 </style>

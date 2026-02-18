@@ -1,5 +1,7 @@
 ---
-import { getCollection } from 'astro:content';
+import '../styles/tmux-theme.css';
+import TmuxStatusBar from '../components/TmuxStatusBar.astro';
+import ThemeToggle from '../components/ThemeToggle.astro';
 import Sidebar from '../components/Sidebar.astro';
 
 interface Props {
@@ -12,6 +14,7 @@ interface Props {
 const { title, showSidebar = true, description = "Nanobot Bytes - Projects and tools built with nanobot AI assistant", image = "https://nanobot.srik.me/og-image.svg" } = Astro.props;
 
 // Fetch all posts once (Astro best practice)
+const { getCollection } = await import('astro:content');
 const allPosts = await getCollection('blog');
 const recentPosts = allPosts
   .filter(post => !post.data.draft)
@@ -53,116 +56,273 @@ const recentPosts = allPosts
 
     <!-- RSS Auto-Discovery -->
     <link rel="alternate" type="application/rss+xml" title="Nanobot Bytes" href="/rss.xml" />
+
+    <!-- Preconnect for fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   </head>
   <body>
-    <header>
-      <nav>
-        <a href="/">Nanobot Bytes</a>
-        <a href="https://github.com/CCAgentOrg/nanobot-blog">GitHub</a>
-      </nav>
-    </header>
-    <div class="container">
-      <main>
-        <slot />
-      </main>
-      {showSidebar && (
-        <aside>
-          <Sidebar recentPosts={recentPosts} />
-        </aside>
-      )}
+    <!-- Tmux Status Bar Header -->
+    <TmuxStatusBar />
+
+    <!-- Main Content Area -->
+    <div class="tmux-container">
+      <div class="tmux-layout">
+        <main class="tmux-main">
+          <slot />
+        </main>
+
+        {showSidebar && (
+          <aside class="tmux-sidebar">
+            <ThemeToggle />
+            <Sidebar />
+          </aside>
+        )}
+      </div>
     </div>
-    <footer>
+
+    <!-- Footer -->
+    <footer class="tmux-footer">
       <p>&copy; {new Date().getFullYear()} Nanobot Bytes</p>
+      <p class="tmux-footer-meta">
+        <span class="tmux-prompt-symbol">$</span>
+        <span class="text-mono text-muted">echo "Built with Astro & GLM"</span>
+      </p>
     </footer>
   </body>
 </html>
 
 <style is:global>
-  :root {
-    --background: #ffffff;
-    --text: #1a1a1a;
-    --primary: #2563eb;
-    --border: #e5e5e5;
-  }
-
+  /* Base body styles */
   body {
-    font-family: system-ui, -apple-system, sans-serif;
-    background: var(--background);
-    color: var(--text);
     margin: 0;
     padding: 0;
     line-height: 1.6;
+    background-color: var(--tmux-bg-primary);
+    color: var(--tmux-text-primary);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
 
-  header {
-    border-bottom: 1px solid var(--border);
-    padding: 1rem 2rem;
-  }
-
-  nav {
-    max-width: 1200px;
+  /* Container for main content */
+  .tmux-container {
+    max-width: 1400px;
     margin: 0 auto;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    padding: 2rem 1rem;
   }
 
-  nav a {
-    text-decoration: none;
-    color: var(--text);
-    margin-left: 1rem;
-  }
-
-  nav a:first-child {
-    margin-left: 0;
-    font-weight: bold;
-  }
-
-  nav a:hover {
-    color: var(--primary);
-  }
-
-  .container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 2rem;
+  /* Layout grid */
+  .tmux-layout {
     display: grid;
     gap: 2rem;
+    grid-template-columns: 1fr;
   }
 
-  main {
-    min-width: 0; /* Prevent overflow */
-  }
-
-  aside {
+  /* Main content area */
+  .tmux-main {
     min-width: 0;
   }
 
-  footer {
-    border-top: 1px solid var(--border);
-    padding: 1rem 2rem;
-    text-align: center;
+  /* Sidebar area */
+  .tmux-sidebar {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
   }
 
   /* Desktop: 2-column layout */
-  @media (min-width: 768px) {
-    .container {
+  @media (min-width: 992px) {
+    .tmux-layout {
       grid-template-columns: 1fr 320px;
+    }
+
+    .tmux-sidebar {
+      position: sticky;
+      top: 5rem;
+      height: fit-content;
+      max-height: calc(100vh - 6rem);
+      overflow-y: auto;
+    }
+  }
+
+  /* Tablet: Smaller gap */
+  @media (min-width: 768px) and (max-width: 991px) {
+    .tmux-layout {
+      grid-template-columns: 1fr 280px;
     }
   }
 
   /* Mobile: Stack sidebar below content */
   @media (max-width: 767px) {
-    .container {
+    .tmux-container {
+      padding: 1rem;
+    }
+
+    .tmux-layout {
       grid-template-columns: 1fr;
+      gap: 1.5rem;
     }
 
-    main {
-      order: 1;
-    }
-
-    aside {
+    .tmux-sidebar {
       order: 2;
     }
+
+    .tmux-main {
+      order: 1;
+    }
+  }
+
+  /* Footer styles */
+  .tmux-footer {
+    border-top: 1px solid var(--tmux-border-color);
+    padding: 2rem 1rem;
+    text-align: center;
+    margin-top: 3rem;
+    background-color: var(--tmux-bg-secondary);
+  }
+
+  .tmux-footer p {
+    margin: 0.5rem 0;
+  }
+
+  .tmux-footer-meta {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.85rem;
+  }
+
+  /* Typography enhancements */
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: 600;
+    line-height: 1.3;
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+    color: var(--tmux-text-primary);
+  }
+
+  h1 {
+    font-size: 2.5rem;
+    border-bottom: 2px solid var(--tmux-accent-secondary);
+    padding-bottom: 0.5rem;
+    margin-top: 0;
+  }
+
+  h2 {
+    font-size: 2rem;
+    border-bottom: 1px solid var(--tmux-border-color);
+    padding-bottom: 0.3rem;
+  }
+
+  h3 {
+    font-size: 1.5rem;
+  }
+
+  h4 {
+    font-size: 1.25rem;
+  }
+
+  p {
+    margin-bottom: 1rem;
+  }
+
+  /* Link styles */
+  a {
+    color: var(--tmux-accent-primary);
+    text-decoration: none;
+    transition: color 0.2s ease;
+  }
+
+  a:hover {
+    color: var(--tmux-accent-secondary);
+    text-decoration: underline;
+  }
+
+  /* Blockquote styles */
+  blockquote {
+    border-left: 4px solid var(--tmux-accent-secondary);
+    padding-left: 1rem;
+    margin: 1.5rem 0;
+    color: var(--tmux-text-secondary);
+    font-style: italic;
+    background-color: var(--tmux-bg-secondary);
+    padding: 1rem;
+    border-radius: 0 4px 4px 0;
+  }
+
+  /* Horizontal rule */
+  hr {
+    border: none;
+    border-top: 1px solid var(--tmux-border-color);
+    margin: 2rem 0;
+  }
+
+  /* List styles */
+  ul, ol {
+    padding-left: 2rem;
+    margin-bottom: 1rem;
+  }
+
+  li {
+    margin-bottom: 0.5rem;
+  }
+
+  /* Table styles */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.5rem 0;
+    font-size: 0.9rem;
+  }
+
+  table th,
+  table td {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    border: 1px solid var(--tmux-border-color);
+  }
+
+  table th {
+    background-color: var(--tmux-bg-secondary);
+    font-weight: 600;
+    color: var(--tmux-text-primary);
+  }
+
+  table tr:hover {
+    background-color: var(--tmux-bg-tertiary);
+  }
+
+  /* Code block enhancements */
+  pre {
+    background-color: var(--tmux-bg-secondary) !important;
+    border: 1px solid var(--tmux-border-color) !important;
+    border-radius: 6px !important;
+    padding: 1rem !important;
+    overflow-x: auto !important;
+    margin: 1.5rem 0 !important;
+  }
+
+  pre code {
+    background: none !important;
+    padding: 0 !important;
+    font-size: 0.9rem !important;
+    line-height: 1.6 !important;
+  }
+
+  /* Inline code */
+  code:not(pre code) {
+    background-color: var(--tmux-bg-tertiary) !important;
+    color: var(--tmux-accent-primary) !important;
+    padding: 0.2em 0.4em !important;
+    border-radius: 3px !important;
+    font-size: 0.9em !important;
+  }
+
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
   }
 </style>

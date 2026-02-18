@@ -1,0 +1,116 @@
+---
+/**
+ * Theme Toggle Component
+ * Switches between dark and light modes
+ */
+---
+
+<script define:vars={{ preferredTheme: 'system' }}>
+  // Get saved theme or system preference
+  function getTheme(): string {
+    if (typeof localStorage === 'undefined') return 'system';
+    const saved = localStorage.getItem('theme');
+    if (saved) return saved;
+    return 'system';
+  }
+
+  // Apply theme to document
+  function applyTheme(theme: string): void {
+    const root = document.documentElement;
+
+    if (theme === 'system') {
+      localStorage.removeItem('theme');
+      root.removeAttribute('data-theme');
+    } else {
+      localStorage.setItem('theme', theme);
+      root.setAttribute('data-theme', theme);
+    }
+
+    // Update active button
+    document.querySelectorAll('.theme-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.theme === theme);
+    });
+  }
+
+  // Initialize on load
+  document.addEventListener('astro:page-load', () => {
+    const theme = getTheme();
+    applyTheme(theme);
+  });
+
+  // Also run immediately for SSR pages
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      const theme = getTheme();
+      applyTheme(theme);
+    });
+  } else {
+    const theme = getTheme();
+    applyTheme(theme);
+  }
+
+  // Expose functions globally
+  (window as any).setTheme = applyTheme;
+  (window as any).getTheme = getTheme;
+</script>
+
+<div class="theme-toggle-container">
+  <button
+    class="theme-btn"
+    data-theme="light"
+    onclick="setTheme('light')"
+    aria-label="Light mode"
+    title="Light mode"
+  >
+    ☀️ Light
+  </button>
+  <button
+    class="theme-btn"
+    data-theme="system"
+    onclick="setTheme('system')"
+    aria-label="System theme"
+    title="Auto (system)"
+  >
+    🖥️ Auto
+  </button>
+  <button
+    class="theme-btn"
+    data-theme="dark"
+    onclick="setTheme('dark')"
+    aria-label="Dark mode"
+    title="Dark mode"
+  >
+    🌙 Dark
+  </button>
+</div>
+
+<style>
+  .theme-toggle-container {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  .theme-btn {
+    background: transparent;
+    border: 1px solid var(--tmux-accent-secondary);
+    color: var(--tmux-status-text);
+    padding: 0.4rem 0.6rem;
+    border-radius: 3px;
+    cursor: pointer;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.75rem;
+    transition: all 0.2s ease;
+  }
+
+  .theme-btn:hover {
+    background-color: var(--tmux-accent-secondary);
+    color: var(--tmux-status-bg);
+  }
+
+  .theme-btn.active {
+    background-color: var(--tmux-accent-secondary);
+    color: var(--tmux-status-bg);
+    border-color: var(--tmux-accent-secondary);
+  }
+</style>

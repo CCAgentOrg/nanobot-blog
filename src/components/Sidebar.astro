@@ -2,17 +2,10 @@
 import GLMWidget from './GLMWidget.astro';
 import RecentPosts from './RecentPosts.astro';
 
-interface Props {
-  recentPosts: Array<{
-    slug: string;
-    data: {
-      title: string;
-      pubDate: Date;
-    };
-  }>;
-}
-
-const { recentPosts } = Astro.props;
+/**
+ * Sidebar Component
+ * Contains GLM widget and recent posts list
+ */
 ---
 
 <aside class="sidebar">
@@ -20,7 +13,7 @@ const { recentPosts } = Astro.props;
     <GLMWidget />
   </div>
   <div class="sidebar-section">
-    <RecentPosts posts={recentPosts} />
+    <RecentPosts />
   </div>
 </aside>
 
@@ -29,8 +22,6 @@ const { recentPosts } = Astro.props;
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
-    position: sticky;
-    top: 2rem;
   }
 
   .sidebar-section {

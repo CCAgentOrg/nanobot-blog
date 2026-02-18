@@ -1,0 +1,405 @@
+/**
+ * Tmux-Inspired Theme for Nanobot Bytes
+ * Dark/light mode support with terminal aesthetics
+ */
+
+/* ===== THEME VARIABLES ===== */
+
+:root {
+  /* Light Mode (Terminal Light) */
+  --tmux-bg-primary: #fafafa;
+  --tmux-bg-secondary: #f0f0f0;
+  --tmux-bg-tertiary: #e8e8e8;
+  --tmux-text-primary: #333333;
+  --tmux-text-secondary: #666666;
+  --tmux-text-muted: #888888;
+  --tmux-border-color: #d0d0d0;
+  --tmux-accent-primary: #007acc;
+  --tmux-accent-secondary: #4ec9b0;
+  --tmux-accent-success: #6a9955;
+  --tmux-accent-warning: #cca700;
+  --tmux-accent-danger: #f44747;
+  --tmux-accent-mono: #4d4d4d;
+
+  /* Status Bar */
+  --tmux-status-bg: #007acc;
+  --tmux-status-text: #ffffff;
+
+  /* Terminal Window */
+  --tmux-window-bg: #ffffff;
+  --tmux-window-header-bg: #007acc;
+  --tmux-window-header-text: #ffffff;
+
+  /* Shadows */
+  --tmux-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --tmux-shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --tmux-shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* Dark Mode (Terminal Dark) */
+[data-theme="dark"] {
+  --tmux-bg-primary: #1e1e1e;
+  --tmux-bg-secondary: #252526;
+  --tmux-bg-tertiary: #2d2d2d;
+  --tmux-text-primary: #d4d4d4;
+  --tmux-text-secondary: #a0a0a0;
+  --tmux-text-muted: #707070;
+  --tmux-border-color: #333333;
+  --tmux-accent-primary: #569cd6;
+  --tmux-accent-secondary: #4ec9b0;
+  --tmux-accent-success: #6a9955;
+  --tmux-accent-warning: #dcdcaa;
+  --tmux-accent-danger: #f44747;
+  --tmux-accent-mono: #9cdcfe;
+
+  /* Status Bar */
+  --tmux-status-bg: #0e0e0e;
+  --tmux-status-text: #d4d4d4;
+
+  /* Terminal Window */
+  --tmux-window-bg: #1e1e1e;
+  --tmux-window-header-bg: #2d2d2d;
+  --tmux-window-header-text: #d4d4d4;
+
+  /* Shadows */
+  --tmux-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --tmux-shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4);
+  --tmux-shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.5);
+}
+
+/* Auto-detect dark mode preference */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --tmux-bg-primary: #1e1e1e;
+    --tmux-bg-secondary: #252526;
+    --tmux-bg-tertiary: #2d2d2d;
+    --tmux-text-primary: #d4d4d4;
+    --tmux-text-secondary: #a0a0a0;
+    --tmux-text-muted: #707070;
+    --tmux-border-color: #333333;
+    --tmux-accent-primary: #569cd6;
+    --tmux-accent-secondary: #4ec9b0;
+    --tmux-accent-success: #6a9955;
+    --tmux-accent-warning: #dcdcaa;
+    --tmux-accent-danger: #f44747;
+    --tmux-accent-mono: #9cdcfe;
+    --tmux-status-bg: #0e0e0e;
+    --tmux-status-text: #d4d4d4;
+    --tmux-window-bg: #1e1e1e;
+    --tmux-window-header-bg: #2d2d2d;
+    --tmux-window-header-text: #d4d4d4;
+    --tmux-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+    --tmux-shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4);
+    --tmux-shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.5);
+  }
+}
+
+/* ===== BASE STYLES ===== */
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background-color: var(--tmux-bg-primary);
+  color: var(--tmux-text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+a {
+  color: var(--tmux-accent-primary);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: var(--tmux-accent-secondary);
+  text-decoration: underline;
+}
+
+code {
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', 'Monaco', monospace;
+  background-color: var(--tmux-bg-tertiary);
+  color: var(--tmux-accent-primary);
+  padding: 0.2em 0.4em;
+  border-radius: 3px;
+  font-size: 0.9em;
+}
+
+pre {
+  background-color: var(--tmux-bg-secondary);
+  border: 1px solid var(--tmux-border-color);
+  border-radius: 4px;
+  padding: 1rem;
+  overflow-x: auto;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', 'Monaco', monospace;
+  font-size: 0.9em;
+  line-height: 1.5;
+}
+
+/* ===== TMUX STATUS BAR ===== */
+
+.tmux-status-bar {
+  background-color: var(--tmux-status-bg);
+  color: var(--tmux-status-text);
+  padding: 0.5rem 1rem;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 0.85rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid var(--tmux-accent-secondary);
+  box-shadow: var(--tmux-shadow-sm);
+}
+
+.tmux-status-bar .left {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.tmux-status-bar .right {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.tmux-status-segment {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.tmux-status-segment.separator::before {
+  content: "│";
+  color: var(--tmux-text-muted);
+  margin-right: 0.5rem;
+}
+
+.tmux-status-segment a {
+  color: var(--tmux-status-text);
+  text-decoration: none;
+}
+
+.tmux-status-segment a:hover {
+  color: var(--tmux-accent-secondary);
+  text-decoration: none;
+}
+
+/* ===== THEME TOGGLE ===== */
+
+.theme-toggle {
+  background: transparent;
+  border: 1px solid var(--tmux-accent-secondary);
+  color: var(--tmux-status-text);
+  padding: 0.3rem 0.6rem;
+  border-radius: 3px;
+  cursor: pointer;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all 0.2s ease;
+}
+
+.theme-toggle:hover {
+  background-color: var(--tmux-accent-secondary);
+  color: var(--tmux-status-bg);
+  text-decoration: none;
+}
+
+/* ===== TERMINAL WINDOW ===== */
+
+.tmux-window {
+  background-color: var(--tmux-window-bg);
+  border: 1px solid var(--tmux-border-color);
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: var(--tmux-shadow-md);
+}
+
+.tmux-window-header {
+  background-color: var(--tmux-window-header-bg);
+  color: var(--tmux-window-header-text);
+  padding: 0.5rem 1rem;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 0.85rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--tmux-border-color);
+}
+
+.tmux-window-body {
+  padding: 1rem;
+}
+
+.tmux-window-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.tmux-window-title::before {
+  content: "─";
+  color: var(--tmux-text-muted);
+}
+
+.tmux-window-controls {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.tmux-window-controls span {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: var(--tmux-accent-secondary);
+}
+
+.tmux-window-controls span:nth-child(1) {
+  background-color: var(--tmux-accent-danger);
+}
+
+.tmux-window-controls span:nth-child(2) {
+  background-color: var(--tmux-accent-warning);
+}
+
+.tmux-window-controls span:nth-child(3) {
+  background-color: var(--tmux-accent-success);
+}
+
+/* ===== TERMINAL PROMPT STYLE ===== */
+
+.tmux-prompt {
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.tmux-prompt-symbol {
+  color: var(--tmux-accent-success);
+  font-weight: bold;
+}
+
+.tmux-prompt-user {
+  color: var(--tmux-accent-secondary);
+  font-weight: bold;
+}
+
+.tmux-prompt-host {
+  color: var(--tmux-accent-primary);
+  font-weight: bold;
+}
+
+.tmux-prompt-dir {
+  color: var(--tmux-accent-warning);
+}
+
+/* ===== TERMINAL LIST STYLE ===== */
+
+.tmux-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 0.9rem;
+}
+
+.tmux-list li {
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--tmux-border-color);
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.tmux-list li:last-child {
+  border-bottom: none;
+}
+
+.tmux-list-item-prefix {
+  color: var(--tmux-accent-secondary);
+  font-weight: bold;
+  min-width: 1.5em;
+}
+
+.tmux-list-item-content {
+  flex: 1;
+}
+
+.tmux-list-item-title {
+  color: var(--tmux-accent-primary);
+  display: block;
+  margin-bottom: 0.25rem;
+  transition: color 0.2s ease;
+}
+
+.tmux-list-item-title:hover {
+  color: var(--tmux-accent-secondary);
+}
+
+.tmux-list-item-meta {
+  color: var(--tmux-text-muted);
+  font-size: 0.85rem;
+}
+
+/* ===== BUTTONS ===== */
+
+.tmux-button {
+  display: inline-block;
+  background: linear-gradient(135deg, var(--tmux-accent-primary), var(--tmux-accent-secondary));
+  color: #ffffff;
+  padding: 0.75rem 1.25rem;
+  border-radius: 4px;
+  text-align: center;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 0.9rem;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  border: none;
+  cursor: pointer;
+  box-shadow: var(--tmux-shadow-sm);
+}
+
+.tmux-button:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--tmux-shadow-md);
+  text-decoration: none;
+  color: #ffffff;
+}
+
+.tmux-button:active {
+  transform: translateY(0);
+  box-shadow: var(--tmux-shadow-sm);
+}
+
+/* ===== UTILITY CLASSES ===== */
+
+.text-mono {
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+}
+
+.text-accent {
+  color: var(--tmux-accent-primary);
+}
+
+.text-success {
+  color: var(--tmux-accent-success);
+}
+
+.text-muted {
+  color: var(--tmux-text-muted);
+}
+
+.bg-secondary {
+  background-color: var(--tmux-bg-secondary);
+}
+
+.border-terminal {
+  border: 1px solid var(--tmux-border-color);
+}
