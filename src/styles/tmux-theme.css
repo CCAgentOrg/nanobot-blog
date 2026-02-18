@@ -403,3 +403,183 @@ pre {
 .border-terminal {
   border: 1px solid var(--tmux-border-color);
 }
+
+/* ===== ANIMATIONS ===== */
+
+@keyframes blink {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 0 0 5px var(--tmux-accent-primary);
+  }
+  50% {
+    box-shadow: 0 0 20px var(--tmux-accent-secondary), 0 0 30px var(--tmux-accent-primary);
+  }
+}
+
+.typing-cursor {
+  display: inline-block;
+  animation: blink 1s infinite;
+}
+
+.fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+.slide-in {
+  animation: slideIn 0.3s ease-out forwards;
+}
+
+/* Staggered fade-in for lists */
+.tmux-list li {
+  opacity: 0;
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+.tmux-list li:nth-child(1) { animation-delay: 0.1s; }
+.tmux-list li:nth-child(2) { animation-delay: 0.2s; }
+.tmux-list li:nth-child(3) { animation-delay: 0.3s; }
+.tmux-list li:nth-child(4) { animation-delay: 0.4s; }
+.tmux-list li:nth-child(5) { animation-delay: 0.5s; }
+
+/* GLM Widget CTA Glow */
+.glm-cta {
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.glm-cta:hover {
+  animation: glow 1.5s infinite;
+  transform: translateY(-2px);
+}
+
+/* ===== MOBILE DRAWER ===== */
+
+.mobile-menu-toggle {
+  display: none;
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  background-color: var(--tmux-accent-primary);
+  color: #ffffff;
+  border: none;
+  border-radius: 50%;
+  width: 56px;
+  height: 56px;
+  cursor: pointer;
+  box-shadow: var(--tmux-shadow-lg);
+  z-index: 1000;
+  transition: all 0.3s ease;
+  font-size: 1.5rem;
+  align-items: center;
+  justify-content: center;
+}
+
+.mobile-menu-toggle:hover {
+  background-color: var(--tmux-accent-secondary);
+  transform: scale(1.1);
+}
+
+.mobile-menu-toggle.active {
+  background-color: var(--tmux-accent-danger);
+}
+
+.mobile-drawer {
+  display: none;
+  position: fixed;
+  top: 0;
+  right: -100%;
+  width: 320px;
+  height: 100vh;
+  background-color: var(--tmux-bg-primary);
+  border-left: 1px solid var(--tmux-border-color);
+  box-shadow: -4px 0 15px rgba(0, 0, 0, 0.3);
+  z-index: 999;
+  overflow-y: auto;
+  transition: right 0.3s ease;
+  padding: 2rem 1.5rem;
+}
+
+.mobile-drawer.open {
+  right: 0;
+}
+
+.mobile-drawer-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 998;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.mobile-drawer-overlay.open {
+  opacity: 1;
+}
+
+@media (max-width: 767px) {
+  .mobile-menu-toggle {
+    display: flex;
+  }
+
+  .mobile-drawer {
+    display: block;
+  }
+
+  .mobile-drawer-overlay {
+    display: block;
+  }
+
+  /* Hide sidebar on mobile (it's in drawer now) */
+  .tmux-sidebar {
+    display: none;
+  }
+}
+
+/* ===== ASCII ART FOOTER ===== */
+
+.ascii-art {
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 0.7rem;
+  line-height: 1;
+  color: var(--tmux-text-muted);
+  white-space: pre;
+  overflow-x: auto;
+  background-color: var(--tmux-bg-secondary);
+  padding: 1rem;
+  border-radius: 4px;
+  margin: 1rem 0;
+}

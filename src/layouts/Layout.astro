@@ -3,6 +3,7 @@ import '../styles/tmux-theme.css';
 import TmuxStatusBar from '../components/TmuxStatusBar.astro';
 import ThemeToggle from '../components/ThemeToggle.astro';
 import Sidebar from '../components/Sidebar.astro';
+import MobileDrawer from '../components/MobileDrawer.astro';
 
 interface Props {
   title: string;
@@ -65,6 +66,9 @@ const recentPosts = allPosts
     <!-- Tmux Status Bar Header -->
     <TmuxStatusBar />
 
+    <!-- Mobile Drawer (for mobile devices) -->
+    <MobileDrawer />
+
     <!-- Main Content Area -->
     <div class="tmux-container">
       <div class="tmux-layout">
@@ -88,7 +92,22 @@ const recentPosts = allPosts
         <span class="tmux-prompt-symbol">$</span>
         <span class="text-mono text-muted">echo "Built with Astro & GLM"</span>
       </p>
+
+      <!-- ASCII Art Easter Egg -->
+      <div class="ascii-art">
+    ╭─────────────────────────────────────────────────╮
+    │  ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄  │
+    │  █ ▄▄▄▄▄ █▀█ █▄█ █▀▀ █▀▀ █   ▄▄ █▀▄ ▄▀▄ █ █  │
+    │  █ █   █ █▀▀ ▀█▀ █   █   █   █▀▄ █▀▄ █▀█ ▀▄▀  │
+    │  █ █▄▄▄█ █   ▀ ▀ ▀▀▀ ▀▀▀ ▀▀▀ ▄▄█ █▀  ▀▄▀ █ █  │
+    │  █▄▄▄▄▄▄▄█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█  │
+    │  [session: nanobytes] [window: main]            │
+    ╰─────────────────────────────────────────────────╯
+      </div>
     </footer>
+
+    <!-- Typing Effect Script -->
+    <script src="/scripts/typing-effect.js"></script>
   </body>
 </html>
 
