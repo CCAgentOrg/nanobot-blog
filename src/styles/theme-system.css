@@ -1,0 +1,226 @@
+/* ============================================
+   Dual Theme System for Nanobot Blog
+   ============================================
+   Design Themes: default | tmux
+   Color Modes: light | dark
+   ============================================ */
+
+/* Base Styles */
+:root {
+  --transition-speed: 0.3s;
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+}
+
+/* ============================================
+   DEFAULT THEME (Normal Blog Design)
+   ============================================ */
+
+[data-theme="default"] {
+  --border-radius: 0.5rem;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+  --font-family: var(--font-sans);
+  --heading-font: var(--font-sans);
+  --code-font: var(--font-mono);
+  --card-border: none;
+  --card-padding: 1.5rem;
+  --container-max-width: 72rem;
+  --nav-border: 1px solid var(--border-color);
+  --nav-shadow: var(--shadow-sm);
+}
+
+/* Default + Light Mode */
+[data-theme="default"][data-mode="light"] {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f9fafb;
+  --bg-tertiary: #f3f4f6;
+  --text-primary: #111827;
+  --text-secondary: #6b7280;
+  --text-muted: #9ca3af;
+  --border-color: #e5e7eb;
+  --accent-color: #3b82f6;
+  --accent-hover: #2563eb;
+  --success-color: #10b981;
+  --error-color: #ef4444;
+  --warning-color: #f59e0b;
+}
+
+/* Default + Dark Mode */
+[data-theme="default"][data-mode="dark"] {
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-tertiary: #334155;
+  --text-primary: #f1f5f9;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --border-color: #334155;
+  --accent-color: #60a5fa;
+  --accent-hover: #3b82f6;
+  --success-color: #34d399;
+  --error-color: #f87171;
+  --warning-color: #fbbf24;
+}
+
+/* ============================================
+   TMUX THEME (Terminal/Hacker Design)
+   ============================================ */
+
+[data-theme="tmux"] {
+  --border-radius: 0;
+  --shadow-sm: none;
+  --shadow-md: none;
+  --shadow-lg: none;
+  --font-family: var(--font-mono);
+  --heading-font: var(--font-mono);
+  --code-font: var(--font-mono);
+  --card-border: 1px solid var(--border-color);
+  --card-padding: 0.75rem;
+  --container-max-width: 80rem;
+  --nav-border: 2px solid var(--border-color);
+  --nav-shadow: none;
+  --terminal-cursor: '█';
+  --terminal-prompt: '⟩';
+}
+
+/* Tmux + Light Mode */
+[data-theme="tmux"][data-mode="light"] {
+  --bg-primary: #fafafa;
+  --bg-secondary: #f0f0f0;
+  --bg-tertiary: #e0e0e0;
+  --text-primary: #1a1a2e;
+  --text-secondary: #4a4a6e;
+  --text-muted: #6a6a8e;
+  --border-color: #3b3b5c;
+  --accent-color: #3b82f6;
+  --accent-hover: #2563eb;
+  --success-color: #22c55e;
+  --error-color: #ef4444;
+  --warning-color: #eab308;
+  --terminal-green: #22c55e;
+  --terminal-amber: #f59e0b;
+  --terminal-blue: #3b82f6;
+  --terminal-red: #ef4444;
+}
+
+/* Tmux + Dark Mode */
+[data-theme="tmux"][data-mode="dark"] {
+  --bg-primary: #0a0a0f;
+  --bg-secondary: #12121a;
+  --bg-tertiary: #1a1a25;
+  --text-primary: #e0e0e0;
+  --text-secondary: #a0a0b0;
+  --text-muted: #707080;
+  --border-color: #3a3a4a;
+  --accent-color: #60a5fa;
+  --accent-hover: #93c5fd;
+  --success-color: #4ade80;
+  --error-color: #f87171;
+  --warning-color: #fbbf24;
+  --terminal-green: #4ade80;
+  --terminal-amber: #fbbf24;
+  --terminal-blue: #60a5fa;
+  --terminal-red: #f87171;
+}
+
+/* ============================================
+   Component Styles
+   ============================================ */
+
+/* Cards */
+.card {
+  background: var(--bg-secondary);
+  border: var(--card-border);
+  border-radius: var(--border-radius);
+  padding: var(--card-padding);
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-speed) ease;
+}
+
+.card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+[data-theme="tmux"] .card:hover {
+  box-shadow: var(--shadow-sm);
+  border-color: var(--accent-color);
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: var(--accent-color);
+  color: var(--bg-primary);
+  border: none;
+  border-radius: var(--border-radius);
+  font-family: var(--font-family);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-speed) ease;
+}
+
+.btn:hover {
+  background: var(--accent-hover);
+}
+
+[data-theme="tmux"] .btn {
+  border: 1px solid var(--accent-color);
+  background: transparent;
+  color: var(--accent-color);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+[data-theme="tmux"] .btn:hover {
+  background: var(--accent-color);
+  color: var(--bg-primary);
+}
+
+/* Links */
+a {
+  color: var(--accent-color);
+  text-decoration: none;
+  transition: color var(--transition-speed) ease;
+}
+
+a:hover {
+  color: var(--accent-hover);
+}
+
+/* Code */
+code, pre {
+  font-family: var(--code-font);
+  background: var(--bg-tertiary);
+  padding: 0.25rem 0.5rem;
+  border-radius: calc(var(--border-radius) / 2);
+}
+
+pre {
+  padding: 1rem;
+  overflow-x: auto;
+}
+
+[data-theme="tmux"] code,
+[data-theme="tmux"] pre {
+  border-radius: 0;
+  border: 1px solid var(--border-color);
+}
+
+/* Headings */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--heading-font);
+  color: var(--text-primary);
+  margin-top: 0;
+}
+
+/* Transitions */
+* {
+  transition: background-color var(--transition-speed) ease,
+              color var(--transition-speed) ease,
+              border-color var(--transition-speed) ease,
+              box-shadow var(--transition-speed) ease;
+}

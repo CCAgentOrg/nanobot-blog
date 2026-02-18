@@ -1,0 +1,117 @@
+---
+/**
+ * Theme Switcher Component
+ * Toggles between Default (normal blog) and Tmux (terminal style) themes
+ */
+
+const defaultTheme = 'default';
+---
+
+<button
+  id="theme-switcher"
+  class="theme-switcher-btn"
+  onclick="toggleDesignTheme()"
+  aria-label="Switch theme"
+>
+  <span id="theme-icon" class="theme-icon">
+    📝
+  </span>
+  <span id="theme-label" class="theme-label">
+    Default
+  </span>
+</button>
+
+<style>
+  .theme-switcher-btn {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-md, 0.5rem);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    transition: all 0.3s ease;
+  }
+
+  .theme-switcher-btn:hover {
+    background: var(--accent-color);
+    color: white;
+    border-color: var(--accent-color);
+    transform: translateY(-1px);
+  }
+
+  .theme-icon {
+    font-size: 1.125rem;
+    display: inline-block;
+    transition: transform 0.3s ease;
+  }
+
+  .theme-label {
+    font-weight: 500;
+  }
+
+  /* Tmux theme override - square buttons */
+  [data-design-theme="tmux"] .theme-switcher-btn {
+    border-radius: 0;
+    font-family: 'Courier New', monospace;
+    text-transform: uppercase;
+    border: 1px solid var(--text-primary);
+    background: transparent;
+  }
+
+  [data-design-theme="tmux"] .theme-switcher-btn:hover {
+    background: var(--accent-color);
+    border-color: var(--accent-color);
+  }
+
+  [data-design-theme="tmux"] .theme-icon {
+    animation: blink 1s step-end infinite;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+</style>
+
+<script define:vars={{ defaultTheme }}>
+  // Toggle design theme function
+  function toggleDesignTheme() {
+    const html = document.documentElement;
+    const currentTheme = html.getAttribute('data-design-theme');
+    const newTheme = currentTheme === 'tmux' ? 'default' : 'tmux';
+
+    // Set new theme
+    html.setAttribute('data-design-theme', newTheme);
+    localStorage.setItem('designTheme', newTheme);
+
+    // Update button UI
+    const icon = document.getElementById('theme-icon');
+    const label = document.getElementById('theme-label');
+    if (icon && label) {
+      icon.textContent = newTheme === 'tmux' ? '💻' : '📝';
+      label.textContent = newTheme === 'tmux' ? 'Tmux' : 'Default';
+    }
+  }
+
+  // Initialize theme on load
+  function initDesignTheme() {
+    const savedTheme = localStorage.getItem('designTheme') || defaultTheme;
+    document.documentElement.setAttribute('data-design-theme', savedTheme);
+
+    // Update button UI
+    const icon = document.getElementById('theme-icon');
+    const label = document.getElementById('theme-label');
+    if (icon && label) {
+      icon.textContent = savedTheme === 'tmux' ? '💻' : '📝';
+      label.textContent = savedTheme === 'tmux' ? 'Tmux' : 'Default';
+    }
+  }
+
+  // Run on page load
+  document.addEventListener('astro:page-load', initDesignTheme);
+  document.addEventListener('DOMContentLoaded', initDesignTheme);
+</script>

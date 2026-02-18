@@ -4,6 +4,9 @@
  * Slide-out sidebar for mobile devices with terminal styling
  */
 
+import ThemeToggle from './ThemeToggle.astro';
+import Sidebar from './Sidebar.astro';
+
 const showThemeToggle = true;
 ---
 
@@ -63,7 +66,14 @@ const showThemeToggle = true;
   const menuToggle = document.getElementById('mobile-menu-toggle');
   const drawerClose = document.getElementById('mobile-drawer-close');
 
+  // Early return if elements not found
+  if (!drawer || !drawerOverlay || !menuToggle || !drawerClose) {
+    console.error('Mobile drawer elements not found');
+    return;
+  }
+
   function openDrawer() {
+    if (!drawer || !drawerOverlay || !menuToggle || !drawerClose) return;
     drawer.classList.add('open');
     drawerOverlay.classList.add('open');
     drawer.setAttribute('aria-hidden', 'false');
@@ -76,6 +86,7 @@ const showThemeToggle = true;
   }
 
   function closeDrawer() {
+    if (!drawer || !drawerOverlay || !menuToggle) return;
     drawer.classList.remove('open');
     drawerOverlay.classList.remove('open');
     drawer.setAttribute('aria-hidden', 'true');
@@ -87,40 +98,49 @@ const showThemeToggle = true;
     menuToggle.focus();
   }
 
-  menuToggle.addEventListener('click', () => {
-    if (drawer.classList.contains('open')) {
-      closeDrawer();
-    } else {
-      openDrawer();
-    }
-  });
+  if (menuToggle) {
+    menuToggle.addEventListener('click', () => {
+      if (drawer?.classList.contains('open')) {
+        closeDrawer();
+      } else {
+        openDrawer();
+      }
+    });
+  }
 
-  drawerClose.addEventListener('click', closeDrawer);
-  drawerOverlay.addEventListener('click', closeDrawer);
+  if (drawerClose) {
+    drawerClose.addEventListener('click', closeDrawer);
+  }
+
+  if (drawerOverlay) {
+    drawerOverlay.addEventListener('click', closeDrawer);
+  }
 
   // Close drawer on escape key
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && drawer.classList.contains('open')) {
+    if (e.key === 'Escape' && drawer?.classList.contains('open')) {
       closeDrawer();
     }
   });
 
   // Focus trap in drawer (for keyboard navigation)
-  drawer.addEventListener('keydown', (e) => {
-    if (e.key === 'Tab') {
-      const focusableElements = drawer.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
-      const firstElement = focusableElements[0];
-      const lastElement = focusableElements[focusableElements.length - 1];
+  if (drawer) {
+    drawer.addEventListener('keydown', (e) => {
+      if (e.key === 'Tab') {
+        const focusableElements = drawer.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+        const firstElement = focusableElements[0] as HTMLElement;
+        const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
 
-      if (e.shiftKey && document.activeElement === firstElement) {
-        e.preventDefault();
-        lastElement.focus();
-      } else if (!e.shiftKey && document.activeElement === lastElement) {
-        e.preventDefault();
-        firstElement.focus();
+        if (e.shiftKey && document.activeElement === firstElement) {
+          e.preventDefault();
+          lastElement?.focus();
+        } else if (!e.shiftKey && document.activeElement === lastElement) {
+          e.preventDefault();
+          firstElement?.focus();
+        }
       }
-    }
-  });
+    });
+  }
 </script>
 
 <style>

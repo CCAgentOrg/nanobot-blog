@@ -26,7 +26,7 @@ const { currentTitle } = Astro.props;
 </nav>
 
 <!-- JSON-LD for Breadcrumbs -->
-<script type="application/ld+json" set:html={JSON.stringify({
+<script is:inline type="application/ld+json" set:html={JSON.stringify({
   "@context": "https://schema.org",
   "@type": "BreadcrumbList",
   "itemListElement": [
