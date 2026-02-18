@@ -1,17 +1,15 @@
 ---
 /**
- * Theme Toggle Component
- * Switches between dark and light modes
+ * Color Mode Toggle Component
+ * Switches between light, dark, and system color modes
  */
 ---
-
-<script src="/scripts/theme-toggle.ts"></script>
 
 <div class="theme-toggle-container">
   <button
     class="theme-btn"
     data-theme="light"
-    onclick="setTheme('light')"
+    onclick="setColorMode('light')"
     aria-label="Light mode"
     title="Light mode"
   >
@@ -20,7 +18,7 @@
   <button
     class="theme-btn"
     data-theme="system"
-    onclick="setTheme('system')"
+    onclick="setColorMode('system')"
     aria-label="System theme"
     title="Auto (system)"
   >
@@ -29,7 +27,35 @@
   <button
     class="theme-btn"
     data-theme="dark"
-    onclick="setTheme('dark')"
+    onclick="setColorMode('dark')"
+    aria-label="Dark mode"
+    title="Dark mode"
+  >
+    🌙 Dark
+  </button>
+</div>
+  <button
+    class="theme-btn"
+    data-theme="light"
+    onclick="setColorMode('light')"
+    aria-label="Light mode"
+    title="Light mode"
+  >
+    ☀️ Light
+  </button>
+  <button
+    class="theme-btn"
+    data-theme="system"
+    onclick="setColorMode('system')"
+    aria-label="System theme"
+    title="Auto (system)"
+  >
+    🖥️ Auto
+  </button>
+  <button
+    class="theme-btn"
+    data-theme="dark"
+    onclick="setColorMode('dark')"
     aria-label="Dark mode"
     title="Dark mode"
   >

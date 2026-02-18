@@ -5,7 +5,7 @@
  */
 
 // Get saved color mode or system preference
-function getColorMode(): string {
+function getColorMode() {
   if (typeof localStorage === 'undefined') return 'system';
   const saved = localStorage.getItem('colorMode');
   if (saved) return saved;
@@ -13,7 +13,7 @@ function getColorMode(): string {
 }
 
 // Apply color mode to document
-function applyColorMode(mode: string): void {
+function applyColorMode(mode) {
   const root = document.documentElement;
 
   if (mode === 'system') {
@@ -27,7 +27,7 @@ function applyColorMode(mode: string): void {
 
   // Update active button
   document.querySelectorAll('.theme-btn').forEach(btn => {
-    btn.classList.toggle('active', (btn as HTMLElement).dataset.theme === mode);
+    btn.classList.toggle('active', btn.dataset.theme === mode);
   });
 }
 
@@ -49,7 +49,5 @@ if (document.readyState === 'loading') {
 }
 
 // Expose functions globally for inline onclick handlers
-(window as any).setColorMode = applyColorMode;
-(window as any).getColorMode = getColorMode;
-
-export { getColorMode, applyColorMode };
+window.setColorMode = applyColorMode;
+window.getColorMode = getColorMode;

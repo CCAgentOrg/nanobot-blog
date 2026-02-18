@@ -1,12 +1,15 @@
 ---
+import '../styles/theme-system.css';
 import '../styles/tmux-theme.css';
 import TmuxStatusBar from '../components/TmuxStatusBar.astro';
 import ThemeToggle from '../components/ThemeToggle.astro';
+import DesignThemeSwitcher from '../components/DesignThemeSwitcher.astro';
 import Sidebar from '../components/Sidebar.astro';
 import MobileDrawer from '../components/MobileDrawer.astro';
 import OptimizedHead from '../components/OptimizedHead.astro';
 import SkipToContent from '../components/SkipToContent.astro';
 import Analytics from '../components/Analytics.astro';
+import { getDesignTheme } from '../scripts/design-theme';
 
 interface Props {
   title: string;
@@ -16,6 +19,9 @@ interface Props {
 }
 
 const { title, showSidebar = true, description = "Nanobot Bytes - Projects and tools built with nanobot AI assistant", image = "https://nanobot.srik.me/og-image.svg" } = Astro.props;
+
+// Get saved design theme (default to tmux)
+const designTheme = 'tmux';
 
 // Fetch all posts once (Astro best practice)
 const { getCollection } = await import('astro:content');
@@ -33,12 +39,10 @@ const recentPosts = allPosts
   }));
 ---
 
-<!doctype html>
-<html lang="en">
-  <head>
-    <OptimizedHead title={title} description={description} image={image} />
-  </head>
-  <body>
+<!doctype html
+  lang="en"
+  data-theme={designTheme}
+>
     <!-- Skip to Content Link (Accessibility) -->
     <SkipToContent />
 
@@ -57,7 +61,16 @@ const recentPosts = allPosts
 
         {showSidebar && (
           <aside class="tmux-sidebar">
-            <ThemeToggle />
+            <div class="theme-controls">
+              <div class="theme-control-section">
+                <span class="theme-control-label">Design</span>
+                <DesignThemeSwitcher />
+              </div>
+              <div class="theme-control-section">
+                <span class="theme-control-label">Mode</span>
+                <ThemeToggle />
+              </div>
+            </div>
             <Sidebar />
           </aside>
         )}
@@ -86,9 +99,11 @@ const recentPosts = allPosts
     </footer>
 
     <!-- Terminal Scripts -->
-    <script src="/scripts/typing-effect.js"></script>
-    <script src="/scripts/konami-code.js"></script>
-    <script src="/scripts/human-typing.ts"></script>
+    <script is:inline src="/scripts/typing-effect.js"></script>
+    <script is:inline src="/scripts/konami-code.js"></script>
+    <script is:inline src="/scripts/human-typing.ts"></script>
+    <script is:inline src="/scripts/design-theme.js"></script>
+    <script is:inline src="/scripts/theme-toggle.js"></script>
 
     <!-- Analytics -->
     <Analytics />
@@ -132,6 +147,46 @@ const recentPosts = allPosts
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
+  }
+
+  /* Theme controls container */
+  .theme-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem;
+    background-color: var(--bg-secondary);
+    border-radius: 0.5rem;
+    border: 1px solid var(--border-color);
+  }
+
+  /* Theme control sections */
+  .theme-control-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  /* Theme control labels */
+  .theme-control-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+    color: var(--text-secondary);
+  }
+
+  /* Tmux theme overrides */
+  [data-theme="tmux"] .theme-controls {
+    background-color: var(--tmux-bg-secondary);
+    border: 1px solid var(--tmux-border-color);
+    border-radius: 0;
+  }
+
+  [data-theme="tmux"] .theme-control-label {
+    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+    text-transform: uppercase;
+    color: var(--tmux-text-secondary);
   }
 
   /* Desktop: 2-column layout */

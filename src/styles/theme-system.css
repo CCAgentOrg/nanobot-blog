@@ -125,6 +125,28 @@
 }
 
 /* ============================================
+   SYSTEM PREFERENCE (AUTO-DETECT)
+   ============================================ */
+
+/* When no data-mode is set, respect system preference */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-mode="light"]) {
+    --bg-primary: #0f172a;
+    --bg-secondary: #1e293b;
+    --bg-tertiary: #334155;
+    --text-primary: #f1f5f9;
+    --text-secondary: #cbd5e1;
+    --text-muted: #94a3b8;
+    --border-color: #334155;
+    --accent-color: #60a5fa;
+    --accent-hover: #3b82f6;
+    --success-color: #34d399;
+    --error-color: #f87171;
+    --warning-color: #fbbf24;
+  }
+}
+
+/* ============================================
    Component Styles
    ============================================ */
 

@@ -1,0 +1,113 @@
+---
+/**
+ * Design Theme Switcher Component
+ * Switches between Default (normal blog) and Tmux (terminal style) design themes
+ */
+---
+
+<div class="design-toggle-container">
+  <button
+    class="design-btn"
+    data-theme="default"
+    onclick="setDesignTheme('default')"
+    aria-label="Default theme"
+    title="Default theme (normal blog)"
+  >
+    📝 Default
+  </button>
+  <button
+    class="design-btn"
+    data-theme="tmux"
+    onclick="setDesignTheme('tmux')"
+    aria-label="Tmux theme"
+    title="Tmux theme (terminal style)"
+  >
+    💻 Tmux
+  </button>
+</div>
+  <button
+    class="design-btn"
+    data-theme="default"
+    onclick="setDesignTheme('default')"
+    aria-label="Default theme"
+    title="Default theme (normal blog)"
+  >
+    📝 Default
+  </button>
+  <button
+    class="design-btn"
+    data-theme="tmux"
+    onclick="setDesignTheme('tmux')"
+    aria-label="Tmux theme"
+    title="Tmux theme (terminal style)"
+  >
+    💻 Tmux
+  </button>
+</div>
+
+<style>
+  .design-toggle-container {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  .design-btn {
+    background: transparent;
+    border: 1px solid var(--accent-primary, #3b82f6);
+    color: var(--text-primary, #1a1a2e);
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+  }
+
+  .design-btn:hover {
+    background-color: var(--accent-primary, #3b82f6);
+    color: var(--bg-primary, #ffffff);
+  }
+
+  .design-btn.active {
+    background-color: var(--accent-primary, #3b82f6);
+    color: var(--bg-primary, #ffffff);
+    border-color: var(--accent-primary, #3b82f6);
+  }
+
+  /* Tmux theme overrides */
+  [data-theme="tmux"] .design-btn {
+    border-radius: 0;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    padding: 0.4rem 0.6rem;
+    background-color: transparent;
+    border: 1px solid var(--tmux-border-color);
+    color: var(--tmux-status-text);
+  }
+
+  [data-theme="tmux"] .design-btn:hover {
+    background-color: var(--tmux-accent-secondary);
+    color: var(--tmux-status-bg);
+  }
+
+  [data-theme="tmux"] .design-btn.active {
+    background-color: var(--tmux-accent-secondary);
+    color: var(--tmux-status-bg);
+    border-color: var(--tmux-accent-secondary);
+  }
+
+  /* Blinking animation for active tmux button */
+  [data-theme="tmux"] .design-btn.active::before {
+    content: '▶';
+    margin-right: 0.25rem;
+    animation: blink 1s infinite;
+  }
+
+  @keyframes blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; }
+  }
+</style>
