@@ -1,0 +1,228 @@
+---
+import '../styles/tmux-theme.css';
+import Layout from '../layouts/Layout.astro';
+import TmuxStatusBar from '../components/TmuxStatusBar.astro';
+import ThemeToggle from '../components/ThemeToggle.astro';
+import Sidebar from '../components/Sidebar.astro';
+import MobileDrawer from '../components/MobileDrawer.astro';
+import SkipToContent from '../components/SkipToContent.astro';
+import OptimizedHead from '../components/OptimizedHead.astro';
+
+// Fetch all posts for sidebar
+const { getCollection } = await import('astro:content');
+const allPosts = await getCollection('blog');
+const recentPosts = allPosts
+  .filter(post => !post.data.draft)
+  .sort((a, b) => b.data.publishDate.valueOf() - a.data.publishDate.valueOf())
+  .slice(0, 5)
+  .map(post => ({
+    slug: post.slug,
+    data: {
+      title: post.data.title,
+      pubDate: post.data.publishDate
+    }
+  }));
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <OptimizedHead
+      title="About"
+      description="About Nanobot Bytes - Projects and tools built with nanobot AI assistant"
+      image="https://nanobot.srik.me/og-image.svg"
+      canonical={new URL('/about', Astro.url)}
+    />
+  </head>
+  <body>
+    <SkipToContent />
+    <TmuxStatusBar />
+    <MobileDrawer />
+
+    <div class="tmux-container">
+      <div class="tmux-layout">
+        <main class="tmux-main" id="main-content" role="main">
+          <article class="tmux-window">
+            <div class="tmux-window-header">
+              <span class="tmux-window-title">about.txt</span>
+              <div class="tmux-window-controls">
+                <span></span><span></span><span></span>
+              </div>
+            </div>
+
+            <div class="tmux-window-body">
+              <div class="about-content">
+                <h1>
+                  <span class="typing-cursor">▊</span>
+                  About Nanobot Bytes
+                </h1>
+
+                <p class="lead">
+                  A digital playground for AI-powered experiments and creative coding.
+                </p>
+
+                <div class="tmux-prompt" style="margin: 2rem 0;">
+                  <span class="tmux-prompt-symbol">$</span>
+                  <span>whoami</span>
+                </div>
+
+                <section class="about-section">
+                  <h2>The Story</h2>
+                  <p>
+                    Nanobot Bytes is born from curiosity—experimenting with what's possible when
+                    you combine lightweight automation, terminal aesthetics, and AI assistance.
+                  </p>
+                  <p>
+                    This space documents projects, experiments, and learnings from building with
+                    <strong>nanobot</strong>—a Python-based AI assistant that helps manage code,
+                    organize thoughts, and automate workflows.
+                  </p>
+                </section>
+
+                <section class="about-section">
+                  <h2>The Philosophy</h2>
+                  <ul class="tmux-list">
+                    <li>
+                      <span class="tmux-list-item-prefix">├──</span>
+                      <div class="tmux-list-item-content">
+                        <strong>Lightweight First:</strong> Small tools, big impact
+                      </div>
+                    </li>
+                    <li>
+                      <span class="tmux-list-item-prefix">├──</span>
+                      <div class="tmux-list-item-content">
+                        <strong>Terminal Aesthetics:</strong> The command line is beautiful
+                      </div>
+                    </li>
+                    <li>
+                      <span class="tmux-list-item-prefix">├──</span>
+                      <div class="tmux-list-item-content">
+                        <strong>Open Source:</strong> Learning in public
+                      </div>
+                    </li>
+                    <li>
+                      <span class="tmux-list-item-prefix">└──</span>
+                      <div class="tmux-list-item-content">
+                        <strong>Fun:</strong> Easter eggs, playful interactions
+                      </div>
+                    </li>
+                  </ul>
+                </section>
+
+                <section class="about-section">
+                  <h2>The Stack</h2>
+                  <div class="tech-stack">
+                    <span class="tech-tag">Astro</span>
+                    <span class="tech-tag">Python</span>
+                    <span class="tech-tag">Node.js</span>
+                    <span class="tech-tag">GitHub Actions</span>
+                    <span class="tech-tag">PM2</span>
+                  </div>
+                </section>
+
+                <section class="about-section">
+                  <h2>Get in Touch</h2>
+                  <p>
+                    Found an Easter egg? Want to collaborate? Just want to say hi?
+                  </p>
+                  <div class="contact-links">
+                    <a href="https://github.com/CCAgentOrg" target="_blank" rel="noopener noreferrer" class="tmux-button">
+                      GitHub
+                    </a>
+                    <a href="https://github.com/CCAgentOrg/nanobot-blog" target="_blank" rel="noopener noreferrer" class="tmux-button">
+                      Star on GitHub
+                    </a>
+                  </div>
+                </section>
+
+                <div class="tmux-prompt" style="margin-top: 3rem;">
+                  <span class="tmux-prompt-symbol">$</span>
+                  <span class="typing-cursor">▊</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+
+        <aside class="tmux-sidebar">
+          <ThemeToggle />
+          <Sidebar />
+        </aside>
+      </div>
+    </div>
+
+    <style is:global>
+      .about-content {
+        max-width: 800px;
+        margin: 0 auto;
+      }
+
+      .about-content h1 {
+        font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+        font-size: 2rem;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .lead {
+        font-size: 1.25rem;
+        color: var(--tmux-text-secondary);
+        margin-bottom: 2rem;
+      }
+
+      .about-section {
+        margin: 2.5rem 0;
+        padding: 1.5rem;
+        background-color: var(--tmux-bg-secondary);
+        border-left: 3px solid var(--tmux-accent-secondary);
+        border-radius: 0 4px 4px 0;
+      }
+
+      .about-section h2 {
+        font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+        font-size: 1.25rem;
+        margin-top: 0;
+        margin-bottom: 1rem;
+        color: var(--tmux-accent-primary);
+      }
+
+      .tech-stack {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+      }
+
+      .tech-tag {
+        background: linear-gradient(135deg, var(--tmux-accent-primary), var(--tmux-accent-secondary));
+        color: #ffffff;
+        padding: 0.4rem 0.8rem;
+        border-radius: 3px;
+        font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+        font-size: 0.85rem;
+        display: inline-block;
+      }
+
+      .contact-links {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+      }
+
+      @media (max-width: 767px) {
+        .contact-links {
+          flex-direction: column;
+        }
+
+        .contact-links .tmux-button {
+          width: 100%;
+        }
+      }
+    </style>
+
+    <script src="/scripts/typing-effect.js"></script>
+    <script src="/scripts/konami-code.js"></script>
+    <script src="/scripts/human-typing.js"></script>
+  </body>
+</html>

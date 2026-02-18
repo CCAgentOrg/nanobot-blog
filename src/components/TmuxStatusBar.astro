@@ -9,14 +9,14 @@
   <div class="left">
     <div class="tmux-status-segment">
       <span class="tmux-status-symbol">🤖</span>
-      <strong>Nanobot Bytes</strong>
+      <a href="/">Nanobot Bytes</a>
     </div>
     <div class="tmux-status-separator">│</div>
     <div class="tmux-status-segment">
-      <span class="tmux-session-info">[session: nanobytes]</span>
+      <a href="/about">[About]</a>
     </div>
     <div class="tmux-status-segment">
-      <span class="tmux-window-info">[window: main]</span>
+      <a href="/projects">[Projects]</a>
     </div>
     <div class="tmux-status-separator">│</div>
     <div class="tmux-status-segment">
@@ -138,12 +138,18 @@
       gap: 0.5rem;
     }
 
-    .tmux-status-segment span,
-    .tmux-status-segment strong {
+    .tmux-status-segment .tmux-session-info,
+    .tmux-status-segment .tmux-window-info,
+    .tmux-status-segment .tmux-branch-info {
       display: none;
     }
 
-    .tmux-status-segment .tmux-status-symbol {
+    .tmux-status-segment .tmux-status-symbol,
+    .tmux-status-segment a {
+      display: inline;
+    }
+
+    .tmux-status-segment strong {
       display: inline;
     }
   }
