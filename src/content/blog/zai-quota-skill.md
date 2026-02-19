@@ -25,8 +25,8 @@ The official dashboard shows this, but checking it requires logging in. I wanted
 ## How to Use
 
 ```bash
-# Install from ClawHub
-clawhub install zai-quota
+# Install
+pip install zai-quota
 
 # Run it
 zai-quota
@@ -61,10 +61,7 @@ Time-based quota (Monthly): 5.0%
 ## Get It
 
 ```bash
-# Install via ClawHub
-clawhub install zai-quota
-
-# Or clone directly
+# Clone and install
 git clone https://github.com/CCAgentOrg/nanobot-skills.git
 cd nanobot-skills/zai-quota
 pip install -e .
