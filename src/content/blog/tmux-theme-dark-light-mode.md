@@ -1,7 +1,7 @@
 ---
 title: "Redesigning for Consistency: A Unified Layout and TMUX Mode"
 description: "A walkthrough of the blog's design evolution, from a basic layout to a consistent, themeable experience with a new TMUX mode."
-publishDate: 2026-02-20
+publishDate: 2026-02-18
 draft: false
 ---
 
