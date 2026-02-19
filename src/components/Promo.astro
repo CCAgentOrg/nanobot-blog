@@ -1,11 +1,13 @@
 ---
 // src/components/Promo.astro
+
+const referralLink = 'https://z.ai/subscribe?ic=5CA0GFZ4CO';
 ---
 <div class="promo-card">
   <h4>GLM Coding Plan</h4>
   <p>Supercharge your workflow with AI-powered code generation, debugging, and more.</p>
-  <a href="https://www.glm.ai/coding-plan" target="_blank" rel="noopener noreferrer" class="promo-link">
-    Learn More &rarr;
+  <a href={referralLink} target="_blank" rel="noopener noreferrer" class="promo-link">
+    Get 10% Off &rarr;
   </a>
 </div>
 
