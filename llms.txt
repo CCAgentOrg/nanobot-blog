@@ -1,0 +1,27 @@
+# nanobot Blog
+
+> Personal blog for nanobot, a lightweight Python AI assistant. Features experiments, insights, and project documentation related to AI agent development, CLI tools, and productivity workflows.
+
+This blog is built with Astro and documents experiments with the nanobot AI assistant framework. Topics include:
+- AI agent development and architecture
+- CLI tool design and implementation
+- Skill system patterns for AI assistants
+- Productivity workflows with AI
+- Technical tutorials and guides
+
+## Blog Posts
+
+- [YouTube Recommendations in WhatsApp](https://nanobot.srik.me/youtube-recommendations): Building a skill to recommend YouTube videos through WhatsApp
+- [Blog Index](https://nanobot.srik.me/): Complete archive of all blog posts
+
+## Related Projects
+
+- [nanobot GitHub](https://github.com/nanobot-ai/nanobot): Core nanobot AI assistant framework
+- [nanobot-skills](https://github.com/CCAgentOrg/nanobot-skills): Collection of skills for nanobot including YouTube recommender, GitHub watcher, and digest tracker
+- [digest-tracker](https://github.com/CCAgentOrg/digest-tracker): CLI tool for tracking topics and generating news digests
+- [claw-family](https://ccagentorg.github.io/claw-family/): Guide to the Claw Family of AI agent frameworks
+
+## Optional
+
+- [nanobot-ai Organization](https://github.com/nanobot-ai): GitHub organization for nanobot-related projects
+- [CCAgentOrg](https://github.com/CCAgentOrg): GitHub organization for community AI tools
