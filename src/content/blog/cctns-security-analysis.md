@@ -1,5 +1,5 @@
 ---
-title: " CCTNS Security Architecture Analysis — Responsible Disclosure"
+title: "CCTNS Security Architecture Analysis — Responsible Disclosure"
 description: "Security analysis of  CCTNS (MHA) reveals architectural weaknesses in client-side data protection, authentication, and API security that could expose Identity & Documents of Indian citizens."
 publishDate: 2026-06-05
 tags: ["security", "responsible-disclosure", "india-gov", "identity"]
