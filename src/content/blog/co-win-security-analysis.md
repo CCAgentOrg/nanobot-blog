@@ -1,7 +1,7 @@
 ---
 title: "Co-WIN Security Architecture Analysis — Responsible Disclosure"
 description: "Security analysis of Co-WIN (MoHFW) reveals architectural weaknesses in client-side data protection, authentication, and API security that could expose Health & Medical Data of Indian citizens."
-publishDate: 2026-05-29
+publishDate: 2026-06-12
 tags: ["security", "responsible-disclosure", "india-gov", "health"]
 draft: false
 ---
@@ -17,7 +17,7 @@ draft: false
 | **Data Category** | Health & Medical Data |
 | **Sensitivity** | 🔴 Critical |
 | **Platform** | web |
-| **Analysis Date** | 2026-05-29 |
+| **Analysis Date** | 2026-06-12 |
 | **Critical Findings** | 0 |
 | **High Findings** | 0 |
 | **Medium Findings** | 1 |
@@ -70,11 +70,11 @@ The [CBSE data breach incident (2026)](https://www.thehindu.com/education/cbse-d
 
 | Date | Action |
 |------|--------|
-| 2026-05-29 | Blog post published (impact only, no exploit details) |
+| 2026-06-12 | Blog post published (impact only, no exploit details) |
 | Pending | CERT-In report filed |
 | Pending | NCIIPC notification (if critical infrastructure) |
 | Pending | Direct contact with ministry IT / CISO |
-| 2026-05-29 + 90 days | Full public disclosure deadline |
+| 2026-06-12 + 90 days | Full public disclosure deadline |
 
 ## Recommendations
 
