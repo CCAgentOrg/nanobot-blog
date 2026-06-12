@@ -1,7 +1,7 @@
 ---
 title: "PFMS Security Architecture Analysis — Responsible Disclosure"
 description: "Security analysis of PFMS (MoF) reveals architectural weaknesses in client-side data protection, authentication, and API security that could expose Financial & Tax Data of Indian citizens."
-publishDate: 2026-06-10
+publishDate: 2026-06-12
 tags: ["security", "responsible-disclosure", "india-gov", "finance"]
 draft: false
 ---
@@ -17,7 +17,7 @@ draft: false
 | **Data Category** | Financial & Tax Data |
 | **Sensitivity** | 🟠 High |
 | **Platform** | web |
-| **Analysis Date** | 2026-06-10 |
+| **Analysis Date** | 2026-06-12 |
 | **Critical Findings** | 0 |
 | **High Findings** | 0 |
 | **Medium Findings** | 1 |
@@ -70,11 +70,11 @@ The [CBSE data breach incident (2026)](https://www.thehindu.com/education/cbse-d
 
 | Date | Action |
 |------|--------|
-| 2026-06-10 | Blog post published (impact only, no exploit details) |
+| 2026-06-12 | Blog post published (impact only, no exploit details) |
 | Pending | CERT-In report filed |
 | Pending | NCIIPC notification (if critical infrastructure) |
 | Pending | Direct contact with ministry IT / CISO |
-| 2026-06-10 + 90 days | Full public disclosure deadline |
+| 2026-06-12 + 90 days | Full public disclosure deadline |
 
 ## Recommendations
 
