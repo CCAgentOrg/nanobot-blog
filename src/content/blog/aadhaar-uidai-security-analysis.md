@@ -1,99 +1,124 @@
 ---
-title: "Aadhaar (UIDAI) Security Architecture Analysis — Responsible Disclosure"
-description: "Security analysis of Aadhaar (UIDAI) (MeitY) reveals architectural weaknesses in client-side data protection, authentication, and API security that could expose Identity & Documents of Indian citizens."
-publishDate: 2026-05-31
+title: "Aadhaar (UIDAI): Security Architecture Analysis — Responsible Disclosure"
+description: "Security analysis of Aadhaar/UIDAI (MeitY) reveals CSP misconfigurations on the central identity portal, a history of critical data breaches affecting 815M+ records, and architectural concerns in the world's largest biometric identity system."
+publishDate: 2026-06-13
 tags: ["security", "responsible-disclosure", "india-gov", "identity"]
 draft: false
 ---
 
 # Aadhaar (UIDAI): Security Architecture Analysis
 
-> **Responsible Disclosure Notice**: This post describes architectural weaknesses and their potential impact. No exploit details, API endpoints, hardcoded secrets, or reproduction steps are included. Findings have been reported through appropriate channels.
+> **Responsible Disclosure Notice**: This post describes architectural weaknesses and their potential impact. No exploit details, API endpoints, hardcoded secrets, or reproduction steps are included. Historical breach data is sourced from publicly reported incidents. Findings have been reported through appropriate channels.
 
 | Field | Detail |
 |-------|--------|
 | **Application** | Aadhaar (UIDAI) |
 | **Ministry/Body** | MeitY |
-| **Data Category** | Identity & Documents |
+| **Data Category** | Identity & Biometrics |
 | **Sensitivity** | 🔴 Critical |
-| **Platform** | web |
-| **Analysis Date** | 2026-05-31 |
-| **Critical Findings** | 0 |
-| **High Findings** | 0 |
-| **Medium Findings** | 1 |
-| **Low Findings** | 0 |
+| **Platform** | Web (uidai.gov.in) + mAadhaar App |
+| **Analysis Date** | 2026-06-13 |
+| **Critical Findings** | 2 |
+| **High Findings** | 3 |
+| **Medium Findings** | 2 |
+| **Low Findings** | 1 |
 
 ## Summary
 
-This analysis examined the client-side architecture of **Aadhaar (UIDAI)**, operated by **MeitY**, which handles **identity & documents** — classified as **critical** sensitivity under our data risk framework.
+This analysis examined the client-side architecture of **Aadhaar**, operated by the **Unique Identification Authority of India (UIDAI)** under **MeitY** — the world's largest biometric identity system covering over 1.4 billion residents. The system handles **identity, biometrics (fingerprints, iris, facial), and demographic data** — classified as **critical** sensitivity.
 
-The analysis identified **1 categories** of architectural concerns, with **0 critical**, **0 high**, **1 medium**, and **0 low** severity findings.
+The analysis combined live header and CSP analysis of uidai.gov.in with publicly documented security incidents. It identified **2 critical**, **3 high**, **2 medium**, and **1 low** severity findings, including a permissive CSP allowing third-party script execution on the central identity portal, and a well-documented history of data breaches affecting over 815 million records.
 
 ## Risk Factors
 
-- No CAPTCHA on OTP generation — vulnerable to automated enumeration and SMS bombing
-- No certificate pinning for high-sensitivity data — MITM attacks possible
+- Permissive Content Security Policy with `unsafe-inline` and `unsafe-eval` on the central identity portal
+- Third-party social media scripts (Twitter, Facebook) permitted on government identity infrastructure
+- Historical insider-mediated breach (2018) where full Aadhaar access was sold for ₹500
+- 815 million records reportedly sold on dark web marketplaces
+- mAadhaar app previously rated 0/10 for security by independent researchers
+- Misconfigured government domains exposing Aadhaar documents (2025 disclosure)
+- Referrer-Policy set to `unsafe-url`, leaking full URL paths to third-party embeds
 
 ## Impact Scenarios
 
+### Scenario: Supply Chain Compromise via Third-Party Scripts
 
-### Scenario: Automated Enumeration
+The uidai.gov.in CSP explicitly allows scripts from social media CDN domains and the Facebook SDK. If any of these third-party CDN domains were compromised — as has happened with multiple CDNs historically — the attacker would have code execution context on India's central identity portal. For a system holding biometric data on 1.4 billion people, the blast radius of a CDN supply chain attack is unprecedented.
 
-Without CAPTCHA or rate limiting on OTP endpoints, an attacker can programmatically trigger OTPs across millions of phone numbers to discover which ones are registered, map the user base, and potentially intercept OTPs at scale through SS7 vulnerabilities or compromised telecom infrastructure.
+### Scenario: Insider-Mediated Data Access (Documented, 2018)
 
+This is not hypothetical — it happened. In January 2018, a major Indian newspaper reported that former UIDAI-enrolled agents were selling access to the entire Aadhaar database for ₹500 per query. For an additional ₹300, anyone could print Aadhaar cards. The breach was enabled by compromised credentials of village-level enterprise (VLE) operators. A user ID and password allowed unrestricted access to any resident's Aadhaar details including name, address, postal code, photo, phone, and email.
 
-### Scenario: Man-in-the-Middle on Public WiFi
+### Scenario: Dark Web Data Correlation (Ongoing)
 
-Without certificate pinning, a user on public WiFi or a compromised network can have their session intercepted. For health or financial data, this means an attacker on the same network could read vaccination records, bank details, or identity documents in transit.
+Reports indicate that 815 million Aadhaar-linked records — including names, phone numbers, addresses, and Aadhaar numbers — have been offered for sale on dark web forums. When combined with other breached databases (voter rolls, bank records, COVID vaccination data), this enables comprehensive identity reconstruction of Indian citizens. Unlike passwords, biometric data cannot be reset.
 
+### Scenario: Referrer Leakage on Identity Portal
 
-### Scenario: Identity Theft Chain
-
-Aadhaar, passport, and voter ID data form the foundation of identity verification across all Indian services. A breach here doesn't just affect one service — it cascades across every system that relies on these documents for KYC verification.
-
+The `Referrer-Policy: unsafe-url` setting on uidai.gov.in means that when a user navigates from an Aadhaar service page to any external link (including social media embeds), the full URL — which may contain session identifiers, service parameters, or personal data references — is sent to the destination server. For a portal handling identity verification requests, this creates a data leakage channel.
 
 ## Findings Overview
 
-| Severity | Category | Matches |
-|----------|----------|---------|
-| 🔵 LOW | Basic Scan | 0 |
-
-*Specific details omitted per responsible disclosure practices.*
+| Severity | Category | Detail |
+|----------|----------|--------|
+| 🔴 CRITICAL | Historical Breach — Insider Access | 2018 breach: Full database accessible for ₹500 via compromised VLE credentials |
+| 🔴 CRITICAL | Historical Breach — Dark Web | 815M+ records reportedly sold on dark web; identity data non-resettable |
+| 🟠 HIGH | CSP Misconfiguration | `unsafe-inline` + `unsafe-eval` in script-src on central identity portal |
+| 🟠 HIGH | Third-Party Script Exposure | Social media CDN and Facebook SDK permitted in CSP script-src |
+| 🟠 HIGH | Domain Misconfiguration | Aadhaar documents exposed via misconfigured government domains (2025 disclosure) |
+| 🟡 MEDIUM | Referrer Policy | `unsafe-url` leaks full URL paths to all third-party embeds |
+| 🟡 MEDIUM | mAadhaar Historical Vulnerabilities | App rated 0/10 for security; SSL MITM, hardcoded keys found (pre-2026) |
+| 🔵 LOW | Deprecated Headers | X-XSS-Protection header present (deprecated per MDN) |
 
 ## Why This Matters
 
-India's Digital Public Infrastructure (DPI) — Aadhaar, UPI, Co-WIN, U-WIN, DigiLocker — is built on a model of scale and inclusion. But inclusion without protection is a trap. When the same mobile number that receives OTPs for a vaccination certificate also receives OTPs for banking, taxation, and identity verification, the security of the weakest link becomes the security of the entire chain.
+Aadhaar is the foundational identity layer of India's Digital Public Infrastructure (DPI). It underpins:
 
-The [CBSE data breach incident (2026)](https://www.thehindu.com/education/cbse-data-breach/) demonstrated that traditional disclosure routes — CERT-In reports, ministry emails — do not produce timely fixes. The researcher who found the vulnerabilities waited months, only to be met with denial and inaction. Public pressure, parliamentary questions, and media coverage eventually forced acknowledgment.
+- **Direct Benefit Transfer (DBT)** — ₹24+ lakh crore transferred to bank accounts
+- **DigiLocker** — 300M+ users storing identity documents
+- **UPI** — 13+ billion monthly transactions authenticated via Aadhaar-linked phones
+- **Telecom** — 1+ billion SIM cards verified through Aadhaar eKYC
+- **Taxation** — PAN-Aadhaar linking mandated for all taxpayers
+
+A security weakness in Aadhaar doesn't affect one service — it cascades across India's entire digital economy. The biometric nature of the data makes breaches permanent: fingerprints and iris scans cannot be changed like passwords.
+
+## Positive Development: UIDAI Bug Bounty Programme (March 2026)
+
+In a significant step forward, UIDAI launched its first structured Bug Bounty Programme in March 2026, selecting 20 security researchers to audit key platforms including the official website, myAadhaar portal, and the Secure QR Code application. This represents a proactive approach to security that should be expanded in scope and duration.
+
+The programme aligns with Section 8(5) of the Digital Personal Data Protection Act, 2023, which requires Data Fiduciaries to implement appropriate security safeguards. Making this a permanent, open programme (rather than a limited-invite event) would significantly strengthen Aadhaar's security posture.
 
 ## Responsible Disclosure Timeline
 
 | Date | Action |
 |------|--------|
-| 2026-05-31 | Blog post published (impact only, no exploit details) |
-| Pending | CERT-In report filed |
-| Pending | NCIIPC notification (if critical infrastructure) |
-| Pending | Direct contact with ministry IT / CISO |
-| 2026-05-31 + 90 days | Full public disclosure deadline |
+| 2026-06-13 | Blog post updated with comprehensive analysis |
+| 2026-06-13 | CERT-In notification initiated |
+| 2026-06-13 | NCIIPC notification (critical infrastructure) |
+| 2026-09-11 | 90-day disclosure deadline |
 
 ## Recommendations
 
-### Immediate (0-7 days)
-- Rotate any hardcoded secrets and move them server-side
-- Implement server-side OTP verification with CAPTCHA and rate limiting
-- Enable certificate pinning for apps handling health/financial data
+### Immediate
 
-### Short-term (1-4 weeks)
-- Add secondary identity verification (ABHA/Aadhaar) for accessing sensitive records
-- Implement proper server-side encryption instead of client-side obfuscation
-- Remove sensitive data from device-local storage
+- **Tighten the CSP**: Remove `unsafe-inline` and `unsafe-eval` from script-src. Use nonce-based or hash-based CSP instead. Remove third-party social media CDNs from script-src on the identity portal — embed social content via iframes (already allowed) rather than script execution.
+- **Fix Referrer-Policy**: Change from `unsafe-url` to `strict-origin-when-cross-origin` to prevent URL leakage to third parties.
+- **Add Permissions-Policy**: Restrict access to browser APIs (camera, microphone, geolocation) that have no legitimate use on an informational portal.
 
-### Structural (1-3 months)
-- Adopt a public vulnerability disclosure program (VDP)
-- Implement continuous security testing in CI/CD
-- Engage independent security auditors for annual assessments
-- Align with DPDP Act 2023 requirements for sensitive personal data
+### Short-Term
+
+- **Expand Bug Bounty**: Convert the limited 20-researcher programme into a continuous, open bug bounty platform. India's security researcher community is large and capable — restricting to 20 researchers leaves most talent untapped.
+- **Audit Third-Party Embeds**: Conduct a supply chain risk assessment of all third-party resources loaded on uidai.gov.in (Twitter widgets, Facebook SDK, Bhashini translation plugin, YouTube embeds).
+- **Subdomain Hardening**: Ensure all service subdomains have consistent security headers and CSP policies. The current analysis could not reach these portals externally, which is positive from an attack surface perspective but may indicate incomplete monitoring.
+
+### Structural
+
+- **Biometric Data Breach Protocol**: Establish a formal protocol for what happens when biometric data is breached — unlike passwords, biometric data cannot be reset. India needs a national framework for biometric identity recovery.
+- **VLE Access Controls**: Implement just-in-time access for village-level operators with multi-factor authentication, session recording, and anomaly detection. The 2018 breach demonstrated that static credentials in the hands of thousands of operators are a systemic risk.
+- **Cross-DPI Monitoring**: Given Aadhaar's role as the identity backbone for UPI, DigiLocker, and other DPI systems, establish a cross-platform security monitoring framework. A weakness in one DPI component affects all others.
 
 ---
 
-*This analysis is part of an ongoing audit of Indian government digital services. See [the project page](/blog/tag/security/) for other analyses.*
+*This is the 21st analysis in our ongoing Indian Government Portal Security Audit series. Previous analyses: [DigiLocker](/blog/digilocker-security-analysis/), [CBSE OASIS](/blog/cbse-oasis-security-analysis/), [UPI/Co-WIN](/blog/uwin-security-analysis/).*
+
+*Dashboard: [Govt Security Audit Dashboard](https://cashlessconsumer.zo.space/govt-security-audit)*
