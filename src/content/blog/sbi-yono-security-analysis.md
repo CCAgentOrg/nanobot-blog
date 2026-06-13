@@ -1,99 +1,109 @@
 ---
-title: "SBI YONO Security Architecture Analysis — Responsible Disclosure"
-description: "Security analysis of SBI YONO (SBI (PSU)) reveals architectural weaknesses in client-side data protection, authentication, and API security that could expose Financial & Tax Data of Indian citizens."
-publishDate: 2026-05-31
-tags: ["security", "responsible-disclosure", "india-gov", "finance"]
+title: "SBI YONO: Security Architecture Analysis — Responsible Disclosure"
+description: "Security analysis of SBI YONO reveals CVE-2025-45080 (critical MITM vulnerability), internal data warehouse endpoint exposed in CSP, and CSP misconfiguration on India's largest bank's digital platform."
+publishDate: 2026-06-13
+tags: ["security", "responsible-disclosure", "india-gov", "finance", "sbi"]
 draft: false
 ---
 
 # SBI YONO: Security Architecture Analysis
 
-> **Responsible Disclosure Notice**: This post describes architectural weaknesses and their potential impact. No exploit details, API endpoints, hardcoded secrets, or reproduction steps are included. Findings have been reported through appropriate channels.
+> **Responsible Disclosure Notice**: This post describes architectural weaknesses and their potential impact. No exploit details, API endpoints, hardcoded secrets, or reproduction steps are included. CVE-2025-45080 is a publicly disclosed vulnerability. Findings have been reported through appropriate channels.
 
 | Field | Detail |
 |-------|--------|
-| **Application** | SBI YONO |
-| **Ministry/Body** | SBI (PSU) |
-| **Data Category** | Financial & Tax Data |
+| **Application** | SBI YONO (You Only Need One) |
+| **Ministry/Body** | SBI (State Bank of India — PSU) |
+| **Data Category** | Banking & Financial Data |
 | **Sensitivity** | 🔴 Critical |
-| **Platform** | web |
-| **Analysis Date** | 2026-05-31 |
-| **Critical Findings** | 0 |
-| **High Findings** | 0 |
-| **Medium Findings** | 1 |
-| **Low Findings** | 0 |
+| **Platform** | Web + Android/iOS App |
+| **Analysis Date** | 2026-06-13 |
+| **Critical Findings** | 1 |
+| **High Findings** | 2 |
+| **Medium Findings** | 2 |
+| **Low Findings** | 1 |
 
 ## Summary
 
-This analysis examined the client-side architecture of **SBI YONO**, operated by **SBI (PSU)**, which handles **financial & tax data** — classified as **critical** sensitivity under our data risk framework.
+This analysis examined the client-side architecture of **SBI YONO**, operated by the **State Bank of India** — India's largest bank with 500M+ customers. The system handles **banking, investments, insurance, and shopping** — classified as **critical** sensitivity.
 
-The analysis identified **1 categories** of architectural concerns, with **0 critical**, **0 high**, **1 medium**, and **0 low** severity findings.
+The analysis combined CSP analysis of sbi.co.in and sbi.bank.in with publicly disclosed vulnerability data. It identified **1 critical**, **2 high**, **2 medium**, and **1 low** severity findings, including a publicly assigned CVE (CVE-2025-45080) for the YONO mobile app, and an internal data warehouse endpoint exposed in the web portal's CSP.
 
 ## Risk Factors
 
-- No CAPTCHA on OTP generation — vulnerable to automated enumeration and SMS bombing
-- No certificate pinning for high-sensitivity data — MITM attacks possible
+- **CVE-2025-45080**: Critical MITM vulnerability in YONO app due to unencrypted HTTP connections
+- Internal data warehouse endpoint exposed in CSP `connect-src` directive
+- CSP with `unsafe-inline` and `unsafe-eval` on banking portal
+- Google Tag Manager and Analytics loaded on banking infrastructure
+- Active phishing campaigns using fake YONO apps
+- Referrer-Policy allows URL leakage on cross-origin navigation
 
 ## Impact Scenarios
 
+### Scenario: Man-in-the-Middle Attack on YONO App (CVE-2025-45080, Documented)
 
-### Scenario: Automated Enumeration
+A critical vulnerability (CVE-2025-45080) was publicly disclosed in the YONO SBI mobile application. The app made connections over unencrypted HTTP instead of HTTPS, allowing attackers on the same network (public WiFi, compromised routers, rogue access points) to intercept banking data in transit. For a banking app used by hundreds of millions of customers — many accessing financial services for the first time — this represents a severe risk, particularly in areas with shared or public network infrastructure.
 
-Without CAPTCHA or rate limiting on OTP endpoints, an attacker can programmatically trigger OTPs across millions of phone numbers to discover which ones are registered, map the user base, and potentially intercept OTPs at scale through SS7 vulnerabilities or compromised telecom infrastructure.
+### Scenario: Internal Data Warehouse Exposure
 
+The CSP `connect-src` directive on sbi.bank.in includes an endpoint on an internal data warehouse subdomain. While the CSP itself doesn't grant access, it reveals the existence and location of internal reporting infrastructure. An attacker could use this information to target the data warehouse directly, potentially accessing customer analytics, reporting data, or internal metrics. The subdomain naming convention (suggesting a marketing/disclosure reporting system) indicates this endpoint may handle aggregated customer data.
 
-### Scenario: Man-in-the-Middle on Public WiFi
+### Scenario: Fake YONO App Phishing (Documented, Ongoing)
 
-Without certificate pinning, a user on public WiFi or a compromised network can have their session intercepted. For health or financial data, this means an attacker on the same network could read vaccination records, bank details, or identity documents in transit.
-
-
-### Scenario: Financial Fraud Vector
-
-Access to tax returns, bank account details, or provident fund data enables targeted phishing, identity theft, and direct financial fraud. Combined with hardcoded API secrets, this could allow automated large-scale data harvesting.
-
+Multiple reports document phishing campaigns where fraudsters send SMS or WhatsApp messages claiming to be YONO updates or KYC verifications. These messages link to fake YONO apps or phishing pages that capture banking credentials. SBI has issued public warnings about these campaigns, indicating they are ongoing and successful. The existence of CVE-2025-45080 compounds this risk — even security-conscious users who verify they have the "real" app were vulnerable to network-level attacks.
 
 ## Findings Overview
 
-| Severity | Category | Matches |
-|----------|----------|---------|
-| 🔵 LOW | Basic Scan | 0 |
-
-*Specific details omitted per responsible disclosure practices.*
+| Severity | Category | Detail |
+|----------|----------|--------|
+| 🔴 CRITICAL | CVE-2025-45080 | YONO app MITM vulnerability — unencrypted HTTP for banking data |
+| 🟠 HIGH | Internal Endpoint Exposure | Data warehouse endpoint visible in CSP connect-src |
+| 🟠 HIGH | CSP Misconfiguration | `unsafe-inline` + `unsafe-eval` in script-src on banking portal |
+| 🟡 MEDIUM | Third-Party Tracking | Google Tag Manager + Analytics on banking infrastructure |
+| 🟡 MEDIUM | Referrer Policy | `no-referrer-when-downgrade` allows URL leakage on HTTP downgrade |
+| 🔵 LOW | Stale Content | Main redirect page last modified September 2025 (9+ months ago) |
 
 ## Why This Matters
 
-India's Digital Public Infrastructure (DPI) — Aadhaar, UPI, Co-WIN, U-WIN, DigiLocker — is built on a model of scale and inclusion. But inclusion without protection is a trap. When the same mobile number that receives OTPs for a vaccination certificate also receives OTPs for banking, taxation, and identity verification, the security of the weakest link becomes the security of the entire chain.
+SBI is India's largest bank:
 
-The [CBSE data breach incident (2026)](https://www.thehindu.com/education/cbse-data-breach/) demonstrated that traditional disclosure routes — CERT-In reports, ministry emails — do not produce timely fixes. The researcher who found the vulnerabilities waited months, only to be met with denial and inaction. Public pressure, parliamentary questions, and media coverage eventually forced acknowledgment.
+- **500M+ customers** — 1 in 3 Indians has an SBI account
+- **YONO**: 50M+ registered users, India's most downloaded banking app
+- **₹60+ lakh crore** in deposits
+- Handles government benefit transfers, pension payments, and public sector salaries
+
+When India's largest bank has a critical MITM vulnerability in its flagship mobile app, it affects the entire population — not just tech-savvy users. Many YONO users are first-time digital banking customers who may not understand network security risks.
 
 ## Responsible Disclosure Timeline
 
 | Date | Action |
 |------|--------|
-| 2026-05-31 | Blog post published (impact only, no exploit details) |
-| Pending | CERT-In report filed |
-| Pending | NCIIPC notification (if critical infrastructure) |
-| Pending | Direct contact with ministry IT / CISO |
-| 2026-05-31 + 90 days | Full public disclosure deadline |
+| 2025 | CVE-2025-45080 publicly disclosed |
+| 2026-06-13 | Blog post updated with comprehensive analysis |
+| 2026-06-13 | CERT-In notification initiated |
+| 2026-09-11 | 90-day disclosure deadline |
 
 ## Recommendations
 
-### Immediate (0-7 days)
-- Rotate any hardcoded secrets and move them server-side
-- Implement server-side OTP verification with CAPTCHA and rate limiting
-- Enable certificate pinning for apps handling health/financial data
+### Immediate
 
-### Short-term (1-4 weeks)
-- Add secondary identity verification (ABHA/Aadhaar) for accessing sensitive records
-- Implement proper server-side encryption instead of client-side obfuscation
-- Remove sensitive data from device-local storage
+- **Patch CVE-2025-45080**: Force HTTPS for all connections in the YONO app. Implement certificate pinning for critical API endpoints. This should have been done before the CVE was publicly assigned.
+- **Remove internal endpoint from CSP**: The data warehouse endpoint in `connect-src` should not be visible to end users. Move reporting/analytics calls to a separate, backend-only channel.
 
-### Structural (1-3 months)
-- Adopt a public vulnerability disclosure program (VDP)
-- Implement continuous security testing in CI/CD
-- Engage independent security auditors for annual assessments
-- Align with DPDP Act 2023 requirements for sensitive personal data
+### Short-Term
+
+- **Tighten CSP**: Remove `unsafe-inline` and `unsafe-eval` from script-src. Use nonce-based CSP. SBI's portal already uses good cookie security (SameSite=Strict, Secure, HttpOnly) — extend this rigor to CSP.
+- **Fix Referrer-Policy**: Change from `no-referrer-when-downgrade` to `strict-origin-when-cross-origin`.
+- **Audit Google Tag Manager**: Evaluate whether marketing analytics scripts belong on banking infrastructure. At minimum, ensure GTM containers are audited and restricted to prevent arbitrary script injection.
+
+### Structural
+
+- **App store integrity**: Work with Google and Apple to aggressively take down fake YONO apps and phishing domains. The ongoing phishing campaigns indicate that reactive takedowns are insufficient — proactive monitoring is needed.
+- **Customer security education**: SBI's cybersecurity awareness page is a positive step. Expand this with in-app security indicators (connection security status, certificate verification) that help non-technical users understand when something is wrong.
+- **Regular penetration testing**: Given SBI's size and criticality, conduct quarterly (not annual) penetration tests covering both web and mobile attack surfaces.
 
 ---
 
-*This analysis is part of an ongoing audit of Indian government digital services. See [the project page](/blog/tag/security/) for other analyses.*
+*See our related analysis: [SBI CMS](/blog/sbi-cms-security-analysis/). Other banking analyses: [UCO Bank](/blog/uco-bank-security-analysis/), [IPPB](/blog/ippb-security-analysis/).*
+
+*Dashboard: [Govt Security Audit Dashboard](https://cashlessconsumer.zo.space/govt-security-audit)*
