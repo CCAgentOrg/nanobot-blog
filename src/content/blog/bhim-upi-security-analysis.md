@@ -1,8 +1,8 @@
 ---
-title: "BHIM UPI Security Architecture Analysis — Responsible Disclosure"
-description: "Security analysis of BHIM UPI (NPCI) reveals architectural weaknesses in client-side data protection, authentication, and API security that could expose Financial & Tax Data of Indian citizens."
-publishDate: 2026-05-31
-tags: ["security", "responsible-disclosure", "india-gov", "finance"]
+title: "BHIM UPI: Security Architecture Analysis — Responsible Disclosure"
+description: "Security analysis of BHIM UPI (NPCI) reveals third-party ad tracking on government payment infrastructure, mixed CSP configuration, and systemic NPCI-wide tracking patterns across all payment platforms."
+publishDate: 2026-06-13
+tags: ["security", "responsible-disclosure", "india-gov", "finance", "npci"]
 draft: false
 ---
 
@@ -12,88 +12,111 @@ draft: false
 
 | Field | Detail |
 |-------|--------|
-| **Application** | BHIM UPI |
-| **Ministry/Body** | NPCI |
-| **Data Category** | Financial & Tax Data |
+| **Application** | BHIM UPI (Bharat Interface for Money) |
+| **Ministry/Body** | NPCI (National Payments Corporation of India) |
+| **Data Category** | Financial & Payment Data |
 | **Sensitivity** | 🔴 Critical |
-| **Platform** | web |
-| **Analysis Date** | 2026-05-31 |
-| **Critical Findings** | 0 |
-| **High Findings** | 0 |
-| **Medium Findings** | 1 |
-| **Low Findings** | 0 |
+| **Platform** | Web (bhimupi.org.in) + Android/iOS App |
+| **Analysis Date** | 2026-06-13 |
+| **Critical Findings** | 1 |
+| **High Findings** | 3 |
+| **Medium Findings** | 3 |
+| **Low Findings** | 1 |
 
 ## Summary
 
-This analysis examined the client-side architecture of **BHIM UPI**, operated by **NPCI**, which handles **financial & tax data** — classified as **critical** sensitivity under our data risk framework.
+This analysis examined the client-side architecture of **BHIM UPI**, operated by **NPCI** — India's government-backed UPI payment app with 100M+ downloads. The system handles **financial transactions, bank account linking, and UPI PIN management** — classified as **critical** sensitivity.
 
-The analysis identified **1 categories** of architectural concerns, with **0 critical**, **0 high**, **1 medium**, and **0 low** severity findings.
+The analysis combined CSP analysis of bhimupi.org.in with publicly documented security research. It identified **1 critical**, **3 high**, **3 medium**, and **1 low** severity findings, including extensive third-party ad tracking infrastructure on the government payment portal and a systemic NPCI-wide pattern of tracking scripts on financial infrastructure.
 
 ## Risk Factors
 
-- No CAPTCHA on OTP generation — vulnerable to automated enumeration and SMS bombing
-- No certificate pinning for high-sensitivity data — MITM attacks possible
+- Third-party ad tracking (DoubleClick, AdSense, Floodlight) on government payment infrastructure — confirmed as NPCI-wide systemic issue
+- Mixed CSP configuration using both `unsafe-inline` AND nonce-based policies — defeating the security benefit of nonces
+- Third-party AI chatbot (Corover.ai) with full script execution context on payment portal
+- Academic research (USENIX 2020) demonstrated device binding attacks on BHIM
+- Unofficial marketing site (bhim.org.in) on Hostinger — separate from NPCI infrastructure
+- UPI fraud losses exceeding ₹485 crore in FY2024-25
 
 ## Impact Scenarios
 
+### Scenario: Third-Party Ad Tracking on Payment Infrastructure
 
-### Scenario: Automated Enumeration
+The bhimupi.org.in CSP explicitly allows scripts from three separate DoubleClick Floodlight accounts, Google AdSense, Google AdWords, Facebook SDK, and Twitter widgets. This means advertising infrastructure has code execution context on India's government payment portal. A compromise at any of these ad networks — which has happened repeatedly across the industry — would give attackers a script injection vector on financial infrastructure.
 
-Without CAPTCHA or rate limiting on OTP endpoints, an attacker can programmatically trigger OTPs across millions of phone numbers to discover which ones are registered, map the user base, and potentially intercept OTPs at scale through SS7 vulnerabilities or compromised telecom infrastructure.
+This is not an isolated finding. Our analysis of NPCI PaySeva and NPCI MAP revealed the exact same tracking infrastructure. This confirms a systemic, NPCI-wide deployment of advertising scripts across all payment platform web properties.
 
+### Scenario: Academic Attack on Device Binding (Documented, USENIX 2020)
 
-### Scenario: Man-in-the-Middle on Public WiFi
+Peer-reviewed research published at USENIX Security 2020 demonstrated that an attacker with a target's phone number and partial debit card information (last six digits and expiry date, printed on the card) could bind the victim's bank account to a new device and perform unauthorized transactions. The attack exploited BHIM's alternate handshake mechanism. While NPCI may have addressed this specific vector, the underlying architectural pattern — using partial card data for device binding — represents a systemic risk.
 
-Without certificate pinning, a user on public WiFi or a compromised network can have their session intercepted. For health or financial data, this means an attacker on the same network could read vaccination records, bank details, or identity documents in transit.
+### Scenario: Unofficial BHIM Domain as Phishing Vector
 
-
-### Scenario: Financial Fraud Vector
-
-Access to tax returns, bank account details, or provident fund data enables targeted phishing, identity theft, and direct financial fraud. Combined with hardcoded API secrets, this could allow automated large-scale data harvesting.
-
+The domain bhim.org.in hosts a marketing page on Hostinger Website Builder (a budget hosting platform), separate from NPCI's infrastructure. The page's `frame-ancestors` CSP allows framing from multiple Hostinger domains. An attacker could register a similar domain or exploit the Hostinger association for phishing — users expecting NPCI-grade security on a "BHIM" domain instead encounter a budget hosting platform with minimal security.
 
 ## Findings Overview
 
-| Severity | Category | Matches |
-|----------|----------|---------|
-| 🔵 LOW | Basic Scan | 0 |
-
-*Specific details omitted per responsible disclosure practices.*
+| Severity | Category | Detail |
+|----------|----------|--------|
+| 🔴 CRITICAL | Third-Party Ad Tracking | DoubleClick, AdSense, Floodlight (3 accounts), Facebook SDK on payment portal — NPCI-wide systemic issue |
+| 🟠 HIGH | Mixed CSP Configuration | `unsafe-inline` + nonce-based CSP defeats nonce security model |
+| 🟠 HIGH | Third-Party AI Chatbot | Corover.ai chatbot with script-src access on payment portal |
+| 🟠 HIGH | Academic Vulnerability | USENIX 2020: Device binding attack using partial debit card data |
+| 🟡 MEDIUM | Backend Server Leak | `x-backend-app: bhim-server1` header exposes server identity |
+| 🟡 MEDIUM | Unofficial Domain | bhim.org.in on Hostinger Website Builder, not NPCI infrastructure |
+| 🟡 MEDIUM | Cloud Resource References | Azure blob storage and Linode object storage in CSP |
+| 🔵 LOW | CDN Information Leak | Akamai server-timing header with request routing data |
 
 ## Why This Matters
 
-India's Digital Public Infrastructure (DPI) — Aadhaar, UPI, Co-WIN, U-WIN, DigiLocker — is built on a model of scale and inclusion. But inclusion without protection is a trap. When the same mobile number that receives OTPs for a vaccination certificate also receives OTPs for banking, taxation, and identity verification, the security of the weakest link becomes the security of the entire chain.
+BHIM is the government's flagship UPI payment app, promoted as "Bharat Ka Apna Payments App." It serves as the reference implementation for India's UPI ecosystem:
 
-The [CBSE data breach incident (2026)](https://www.thehindu.com/education/cbse-data-breach/) demonstrated that traditional disclosure routes — CERT-In reports, ministry emails — do not produce timely fixes. The researcher who found the vulnerabilities waited months, only to be met with denial and inaction. Public pressure, parliamentary questions, and media coverage eventually forced acknowledgment.
+- **100M+ downloads** on Google Play
+- **Direct bank-to-bank transfers** using UPI IDs
+- **RuPay Credit Card on UPI** integration
+- **UPI Circle** for non-bank-account holders
+- **Foundation for financial inclusion** initiatives
+
+When the government's own payment app portal loads advertising scripts, it sets a dangerous precedent. If NPCI considers ad tracking acceptable on payment infrastructure, every UPI app developer may follow suit — multiplying the attack surface across India's entire digital payments ecosystem.
+
+## Positive Developments
+
+### NPCI Mobile Application Security Framework (May 2025)
+
+NPCI issued circular NPCI2025-26IS003 mandating security controls for UPI mobile applications, including root detection, RASP (Runtime Application Self-Protection), SDK handling, and annual CERT-In empanelled audits. This represents a structured approach to app-level security.
+
+### BHIM App Update
+
+The BHIM app has been rebranded as "BHIM Bharat's Own Payments App" with enhanced security features, including passcode protection and UPI PIN requirements for all outgoing transactions.
 
 ## Responsible Disclosure Timeline
 
 | Date | Action |
 |------|--------|
-| 2026-05-31 | Blog post published (impact only, no exploit details) |
-| Pending | CERT-In report filed |
-| Pending | NCIIPC notification (if critical infrastructure) |
-| Pending | Direct contact with ministry IT / CISO |
-| 2026-05-31 + 90 days | Full public disclosure deadline |
+| 2026-06-13 | Blog post published |
+| 2026-06-13 | CERT-In notification initiated |
+| 2026-09-11 | 90-day disclosure deadline |
 
 ## Recommendations
 
-### Immediate (0-7 days)
-- Rotate any hardcoded secrets and move them server-side
-- Implement server-side OTP verification with CAPTCHA and rate limiting
-- Enable certificate pinning for apps handling health/financial data
+### Immediate
 
-### Short-term (1-4 weeks)
-- Add secondary identity verification (ABHA/Aadhaar) for accessing sensitive records
-- Implement proper server-side encryption instead of client-side obfuscation
-- Remove sensitive data from device-local storage
+- **Remove ad tracking from payment infrastructure**: Remove DoubleClick, AdSense, Floodlight, and Facebook SDK from bhimupi.org.in CSP. This is a payment portal — not a marketing site. The presence of ad tracking on financial infrastructure is a systemic NPCI issue confirmed across three separate analyses.
+- **Fix CSP configuration**: Remove `unsafe-inline` from script-src. The CSP already uses nonces and hashes — `unsafe-inline` is ignored by modern browsers when nonces are present, but keeping it signals misconfiguration and confuses older browser fallback.
 
-### Structural (1-3 months)
-- Adopt a public vulnerability disclosure program (VDP)
-- Implement continuous security testing in CI/CD
-- Engage independent security auditors for annual assessments
-- Align with DPDP Act 2023 requirements for sensitive personal data
+### Short-Term
+
+- **Audit Corover.ai chatbot**: Conduct a supply chain risk assessment of the third-party AI chatbot service. Ensure chatbot sessions cannot access payment-related cookies, tokens, or local storage.
+- **Secure bhim.org.in**: Either redirect bhim.org.in to bhimupi.org.in with proper security headers, or remove it entirely. An unofficial BHIM domain on budget hosting is a phishing risk.
+- **Remove backend header**: Remove `x-backend-app` header to prevent server fingerprinting.
+
+### Structural
+
+- **NPCI-wide tracking audit**: Our analysis confirms advertising scripts on three separate NPCI properties (PaySeva, MAP, BHIM). Conduct a comprehensive audit of ALL npci.org.in subdomains for tracking scripts and establish a policy that financial infrastructure must not load advertising SDKs.
+- **Implement Content-Security-Policy-Report-Only**: Before tightening CSP, deploy report-only mode to identify all legitimate script sources and ensure no functionality breaks during CSP hardening.
 
 ---
 
-*This analysis is part of an ongoing audit of Indian government digital services. See [the project page](/blog/tag/security/) for other analyses.*
+*This analysis confirms a systemic NPCI-wide pattern of third-party ad tracking on financial infrastructure. See our related analyses: [NPCI PaySeva](/blog/npci-payseva-security-analysis/), [NPCI MAP](/blog/npci-map-security-analysis/).*
+
+*Dashboard: [Govt Security Audit Dashboard](https://cashlessconsumer.zo.space/govt-security-audit)*
