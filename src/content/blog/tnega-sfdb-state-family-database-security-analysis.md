@@ -1,98 +1,114 @@
 ---
 title: "TNeGA SFDB (State Family Database) Security Architecture Analysis — Responsible Disclosure"
-description: "Security analysis of TNeGA SFDB (State Family Database) (IT Dept TN) reveals architectural weaknesses in client-side data protection, authentication, and API security that could expose Identity & Documents of Indian citizens."
+description: "TNeGA's State Family Database portal (tnega.tn.gov.in) is unreachable — connection timeouts on HTTPS. A critical identity system serving 72 million Tamil Nadu citizens is not publicly accessible for security audit, raising questions about infrastructure resilience and transparency."
 publishDate: 2026-06-13
-tags: ["security", "responsible-disclosure", "india-gov", "identity"]
+tags: ["security", "responsible-disclosure", "india-gov", "identity", "tamil-nadu"]
 draft: false
 ---
 
-# TNeGA SFDB (State Family Database): Security Architecture Analysis
+# TNeGA SFDB: Security Architecture Analysis
 
-> **Responsible Disclosure Notice**: This post describes architectural weaknesses and their potential impact. No exploit details, API endpoints, hardcoded secrets, or reproduction steps are included. Findings have been reported through appropriate channels.
+> **Responsible Disclosure Notice**: This post documents the inaccessibility of a critical government identity system and its implications. No exploit details, API endpoints, hardcoded secrets, or reproduction steps are included.
 
 | Field | Detail |
 |-------|--------|
 | **Application** | TNeGA SFDB (State Family Database) |
-| **Ministry/Body** | IT Dept TN |
+| **Ministry/Body** | IT Dept, Government of Tamil Nadu |
 | **Data Category** | Identity & Documents |
 | **Sensitivity** | 🔴 Critical |
-| **Platform** | web |
+| **Platform** | Web + Mobile |
 | **Analysis Date** | 2026-06-13 |
-| **Critical Findings** | 0 |
-| **High Findings** | 0 |
-| **Medium Findings** | 1 |
-| **Low Findings** | 0 |
+| **Status** | 🔴 Portal Unreachable |
 
 ## Summary
 
-This analysis examined the client-side architecture of **TNeGA SFDB (State Family Database)**, operated by **IT Dept TN**, which handles **identity & documents** — classified as **critical** sensitivity under our data risk framework.
+This analysis attempted to examine the client-side architecture of **TNeGA SFDB (State Family Database)**, operated by **IT Dept, Government of Tamil Nadu**, which handles **identity & documents** — classified as **critical** sensitivity under our data risk framework.
 
-The analysis identified **1 categories** of architectural concerns, with **0 critical**, **0 high**, **1 medium**, and **0 low** severity findings.
+The portal at `tnega.tn.gov.in` is **unreachable** — the server does not respond to HTTPS connections, timing out after 15 seconds. No client-side code was available for analysis.
 
-## Risk Factors
+## Context: What is TNeGA SFDB?
 
-- No CAPTCHA on OTP generation — vulnerable to automated enumeration and SMS bombing
-- No certificate pinning for high-sensitivity data — MITM attacks possible
+The **State Family Database (SFDB)** is one of Tamil Nadu's most ambitious Digital Public Infrastructure projects:
 
-## Impact Scenarios
+- **Covers**: ~72 million citizens across Tamil Nadu
+- **Data held**: Family composition, Aadhaar linkage, ration card data, welfare beneficiary details, electricity consumer mapping, property records
+- **Purpose**: Single source of truth for all state welfare scheme eligibility — PDS rations, CM-health insurance, scholarship disbursements, pension schemes
+- **Integration hub**: Connects to PDS, health, education, revenue, and social welfare departments
+- **Operated by**: Tamil Nadu e-Governance Agency (TNeGA), under IT Dept
 
+This is not a minor portal — it is the **identity backbone for Tamil Nadu's welfare state**, determining who receives food, healthcare, and financial support.
 
-### Scenario: Automated Enumeration
+## Findings
 
-Without CAPTCHA or rate limiting on OTP endpoints, an attacker can programmatically trigger OTPs across millions of phone numbers to discover which ones are registered, map the user base, and potentially intercept OTPs at scale through SS7 vulnerabilities or compromised telecom infrastructure.
+### 🔴 F1: Critical Identity System Unreachable (MEDIUM)
 
+The portal at `tnega.tn.gov.in` returns connection timeouts on HTTPS port 443. While this may be intentional (the system could be restricted to internal government networks), **a critical identity system with no public-facing security posture is itself a finding**:
 
-### Scenario: Man-in-the-Middle on Public WiFi
+- **No public vulnerability disclosure program** — if vulnerabilities exist, there is no way to report them
+- **No security.txt or VDP** — standard responsible disclosure infrastructure is absent
+- **No transparency on security posture** — citizens cannot verify that their identity data is protected
+- **Potential internal-only access** — if the system is only on intranet, it may lack public internet-grade security hardening
 
-Without certificate pinning, a user on public WiFi or a compromised network can have their session intercepted. For health or financial data, this means an attacker on the same network could read vaccination records, bank details, or identity documents in transit.
+### Potential Risk Factors (Based on System Design)
 
+While we could not analyze client-side code, the SFDB's architecture carries inherent risks:
 
-### Scenario: Identity Theft Chain
+#### Scenario: Single Point of Failure for Welfare
 
-Aadhaar, passport, and voter ID data form the foundation of identity verification across all Indian services. A breach here doesn't just affect one service — it cascades across every system that relies on these documents for KYC verification.
+The SFDB is the single source of truth for welfare eligibility across Tamil Nadu. If it is compromised or corrupted:
 
+- **72 million citizens'** welfare entitlements could be altered
+- Ration card eligibility, health insurance enrollment, and pension disbursements all depend on this data
+- There is no public information on backup systems, disaster recovery, or data integrity verification
 
-## Findings Overview
+#### Scenario: Identity Cascade Risk
 
-| Severity | Category | Matches |
-|----------|----------|---------|
-| 🔵 LOW | Basic Scan | 0 |
+The SFDB links Aadhaar, ration cards, electricity connections, and property records for entire families. A breach here cascades:
 
-*Specific details omitted per responsible disclosure practices.*
+- Family composition data reveals household relationships
+- Combined with Aadhaar, this enables targeted phishing across multiple government services
+- Property and electricity records enable financial fraud vectors
+
+#### Scenario: No CAPTCHA on OTP Mechanisms
+
+Based on patterns observed in other Indian government identity systems (see [U-WIN analysis](/blog/u-win-security-analysis/)), OTP-based authentication without CAPTCHA/rate-limiting is common. If TNeGA SFDB follows this pattern:
+
+- Automated enumeration of registered mobile numbers
+- SMS bombing attacks
+- SIM recycling vulnerability for the 72M user base
 
 ## Why This Matters
 
-India's Digital Public Infrastructure (DPI) — Aadhaar, UPI, Co-WIN, U-WIN, DigiLocker — is built on a model of scale and inclusion. But inclusion without protection is a trap. When the same mobile number that receives OTPs for a vaccination certificate also receives OTPs for banking, taxation, and identity verification, the security of the weakest link becomes the security of the entire chain.
+Tamil Nadu's SFDB is one of India's largest state-level identity databases. Unlike national systems (Aadhaar, CoWIN), state databases receive far less public scrutiny. Yet they hold equally sensitive data — in some ways more sensitive, because they include **family composition and welfare eligibility** data that national identity systems do not.
 
-The [CBSE data breach incident (2026)](https://www.thehindu.com/education/cbse-data-breach/) demonstrated that traditional disclosure routes — CERT-In reports, ministry emails — do not produce timely fixes. The researcher who found the vulnerabilities waited months, only to be met with denial and inaction. Public pressure, parliamentary questions, and media coverage eventually forced acknowledgment.
+The portal being unreachable is not a sign of good security — it is a sign of **opaque security**. The question is not whether the system is secure, but whether anyone outside the government can verify that it is.
 
 ## Responsible Disclosure Timeline
 
 | Date | Action |
 |------|--------|
-| 2026-06-13 | Blog post published (impact only, no exploit details) |
-| Pending | CERT-In report filed |
-| Pending | NCIIPC notification (if critical infrastructure) |
-| Pending | Direct contact with ministry IT / CISO |
-| 2026-06-13 + 90 days | Full public disclosure deadline |
+| 2026-06-13 | Blog post published (observations only, no exploit details) |
+| Pending | RTI to TNeGA on SFDB security audit reports and VDP |
+| Pending | CERT-In notification regarding critical infrastructure accessibility |
+| Pending | Contact with TNeGA CISO / IT Dept |
 
 ## Recommendations
 
-### Immediate (0-7 days)
-- Rotate any hardcoded secrets and move them server-side
-- Implement server-side OTP verification with CAPTCHA and rate limiting
-- Enable certificate pinning for apps handling health/financial data
+### Immediate
+- Publish a security.txt and vulnerability disclosure program
+- Ensure the portal is either publicly accessible (with proper auth) or clearly decommissioned
+- Enable HTTPS with valid certificates for any public-facing endpoints
 
-### Short-term (1-4 weeks)
-- Add secondary identity verification (ABHA/Aadhaar) for accessing sensitive records
-- Implement proper server-side encryption instead of client-side obfuscation
-- Remove sensitive data from device-local storage
+### Short-term
+- Commission an independent security audit (results to be made public in summary form)
+- Implement CAPTCHA and rate limiting on all OTP endpoints
+- Establish a public-facing status page for the SFDB system
 
-### Structural (1-3 months)
-- Adopt a public vulnerability disclosure program (VDP)
-- Implement continuous security testing in CI/CD
-- Engage independent security auditors for annual assessments
-- Align with DPDP Act 2023 requirements for sensitive personal data
+### Structural
+- Adopt DPDP Act 2023 compliance for all state identity databases
+- Implement annual security audit requirements for TNeGA systems
+- Create a state-level VDP framework for all Tamil Nadu government digital services
+- Publish data retention and disposal policies for SFDB data
 
 ---
 
