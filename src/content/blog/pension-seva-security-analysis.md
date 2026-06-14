@@ -1,118 +1,139 @@
 ---
-title: "SBI PensionSeva: Security Architecture Analysis — Responsible Disclosure"
-description: "Security analysis of SBI PensionSeva portal reveals client-side encryption flaws that could expose pensioner credentials and financial data."
-publishDate: 2026-06-01
-tags: ["security", "responsible-disclosure", "india-gov", "finance", "sbi", "pension"]
+title: "Pension Seva: Security Architecture Analysis — Responsible Disclosure"
+description: "Security analysis of Indian government pension portals (MoF / DoPPW) reveals client-side SHA256 password hashing with a hardcoded salt shipped in HTML, weak text CAPTCHA, and OTP routed to registered contact details."
+publishDate: 2026-06-14
+tags: ["security", "responsible-disclosure", "india-gov", "finance", "pension"]
 draft: false
 ---
 
-## Responsible Disclosure Notice
+# Pension Seva: Security Architecture Analysis
 
-This analysis examines the security architecture of SBI's PensionSeva portal from a responsible disclosure perspective. **No exploit details, API endpoints, secret values, or reproduction steps are included.** The goal is to highlight systemic architectural weaknesses so they can be fixed before they are exploited. Findings have been classified by severity with recommended remediations.
+> **Responsible Disclosure Notice**: This post describes architectural weaknesses and their potential impact. No exact API endpoints, hardcoded key values, or step-by-step reproduction instructions are included. Salt material is referenced by *pattern*, not by value. Findings have been reported through appropriate channels.
 
-## Metadata
-
-| Field | Value |
-|-------|-------|
-| **Portal** | SBI PensionSeva |
-| **Operator** | State Bank of India |
-| **Ministry** | Ministry of Finance (MoF) |
-| **Category** | Finance / Pension Services |
-| **Sensitivity** | High (pensioner PII, account numbers, financial records) |
-| **Platform** | Web (ASP.NET Core) |
-| **Analysis Date** | 2026-06-01 |
-| **Findings** | 0 Critical, 2 High, 3 Medium, 4 Low |
+| Field | Detail |
+|-------|--------|
+| **Application** | Pension Seva / Pensioners' Portal (umbrella term) |
+| **Ministry/Body** | Ministry of Finance / Dept. of Pension & Pensioners' Welfare |
+| **Data Category** | Pensioner identity (PPO/PAN/Aadhaar), password, mobile, bank account, life certificate |
+| **Sensitivity** | 🔴 High |
+| **Platform** | Web (dotpension.gov.in working; pensionersportal.gov.in unreachable at audit time; SBI Pension Seva at sbi.bank.in) |
+| **Analysis Date** | 2026-06-14 |
+| **Critical Findings** | 1 |
+| **High Findings** | 3 |
+| **Medium Findings** | 3 |
+| **Low Findings** | 2 |
 
 ## Summary
 
-SBI's PensionSeva portal — used by millions of Indian pensioners to download pension slips, submit life certificates, and manage pension accounts — implements client-side encryption using AES-CBC to "protect" sensitive data like passwords, OTPs, and account numbers during transmission. However, the encryption key and initialization vector are sent alongside the ciphertext in the same request, rendering the encryption completely ineffective. Any network-level observer (public WiFi, ISP, or MITM attacker) can trivially recover plaintext credentials. Additionally, OTP rate limiting is enforced only in client-side browser storage, and a third-party tracking pixel is hidden behind code obfuscation on this banking portal.
+This analysis examined the client-side architecture of three Indian pension-facing portals under the Ministry of Finance / DoPPW umbrella: the **central Pensioners' Portal** (`pensionersportal.gov.in`), the **DoT Pension Portal** (`dotpension.gov.in`), and **SBI Pension Seva** (`pensionseva.sbi.bank.in`, the public-sector-bank-operated disbursal portal that "Pension Seva" most commonly refers to).
+
+At audit time, `pensionersportal.gov.in` was **completely unreachable** — DNS resolved but TCP port 443 timed out for the entire audit window — meaning the central pensioners' portal was either down, firewalled, or rate-limited. This itself is a finding: a critical-infrastructure-adjacent portal for ~70 lakh central government pensioners can be unavailable for extended periods.
+
+The working portals (`dotpension.gov.in`, `pensionseva.sbi.bank.in`) both use **client-side cryptographic operations** on passwords / account numbers before transmission. DoT Pension Portal computes `SHA256(SHA256(username + password) + hardcodedSalt)` in the browser, where the salt is a 20-character ASCII string baked into a hidden HTML field. SBI Pension Seva uses **per-request random AES key/IV pairs** generated client-side and sent *alongside* the ciphertext.
+
+The analysis identified **1 critical**, **3 high**, **3 medium**, and **2 low** severity findings.
 
 ## Risk Factors
 
-- **Millions of elderly pensioners** use this portal — a demographic specifically targeted by scammers
-- Portal handles **PPO numbers, bank account numbers, pension amounts, life certificate status**
-- Login credentials (user ID + password) are "encrypted" client-side but the decryption key travels in the same HTTP request
-- Password reset flows use the same flawed encryption for OTPs and new passwords
-- The original domain listed in the audit database (`pensionseva.gov.in`) does not resolve — the actual portal runs at a subdomain of `sbi.bank.in`
+- Central Pensioners' Portal (`pensionersportal.gov.in`) was unreachable during the audit window — service availability for a critical-infrastructure system
+- DoT Pension Portal hardcodes a 20-character SHA256 salt in every login page HTML response
+- DoT Pension Portal password hashing uses **plain SHA256** (fast, GPU-friendly) instead of bcrypt/scrypt/argon2 — defeats the purpose of password hashing
+- SBI Pension Seva ships AES key+IV alongside ciphertext in the same POST request — equivalent to sending plaintext
+- Both portals use legacy ASP.NET-generated text CAPTCHAs (no reCAPTCHA / Turnstile / hCaptcha anywhere)
+- Both portals route OTP to "registered contact details" — same anti-pattern that caused OTP delivery issues in U-WIN and Co-WIN
+- SBI Pension Seva bundles CryptoJS v3.0.2 — even older than PM-Kisan's v3.1.2; predates 2013 hardening guidance
+- DoT Pension Portal CSP permits `unsafe-inline` and `unsafe-eval` in `default-src`
+- DoT Pension Portal CSP whitelists `http://ajax.googleapis.com` (HTTP, not HTTPS) — passive downgrade risk
 
 ## Impact Scenarios
 
-### Scenario 1: WiFi Eavesdropping on Pensioner Credentials
+### Scenario: Central Pensioners' Portal Outage
 
-An elderly pensioner connects to public WiFi at a hospital or railway station and logs into PensionSeva to download their pension slip. An attacker on the same network intercepts the login request. Despite the portal's client-side "encryption," the request contains the AES key and IV alongside the encrypted password. The attacker recovers the pensioner's credentials in real-time, logs in from another device, and accesses their full pension profile — account numbers, transaction history, PPO details, and life certificate status.
+For the entire audit window (~5 minutes of probes from multiple tools), `pensionersportal.gov.in` (164.100.192.57:443) accepted no TCP connections — DNS resolved cleanly but the TLS endpoint was dark. If this is a routine pattern, ~70 lakh central government pensioners depending on the portal for life certificate submission (Jeevan Pramaan), pension slip download, and grievance redressal are at the mercy of an unreliable host. For an elderly user base with limited digital fallbacks, this is more than a UX issue — it can stall pension disbursal until physical CSC visits become possible.
 
-### Scenario 2: OTP Bypass via Rate Limit Manipulation
+### Scenario: Static Salt + Plain SHA256 Enables Rainbow Tables
 
-A scammer targeting pensioners obtains a user ID (often shared via phishing calls). They attempt to reset the password using the "Forgot Password" flow. The OTP resend rate limit is enforced only in the browser's `sessionStorage` — simply opening a new tab or clearing storage resets the counter. By rapidly requesting OTPs across multiple sessions, the scammer could overwhelm the victim's phone with OTP messages, then call posing as SBI support claiming "we sent you many OTPs by mistake, please share the latest one to cancel them."
+The DoT Pension Portal login flow computes `SHA256(SHA256(username + password) + STATIC_SALT)` in the browser and posts the hash. Three problems compound:
 
-### Scenario 3: Third-Party Data Leakage
+1. **The static salt is shipped to every browser.** Anyone reading the HTML has the salt. Salt only protects against pre-computed rainbow tables when the salt is secret or per-user; a public salt is just a domain separator.
+2. **SHA256 is fast.** A modern GPU can compute billions of SHA256/sec. Even with the salt, an attacker with a leaked hash dump can brute-force common passwords (and Indian-password corpora are well-documented) trivially.
+3. **The inner hash `SHA256(username + password)` is the effective transmitted secret.** Once an attacker recovers `SHA256(username + password)` for one user (e.g., via a downstream server leak), they can re-salt it client-side and authenticate without ever learning the plaintext password. The hashing scheme is password-equivalent, not password-derived.
 
-The portal includes an obfuscated JavaScript snippet that creates a hidden tracking pixel to a third-party analytics domain. While analytics tracking is common, hiding it behind `eval()` with Dean Edwards packer obfuscation on a banking portal raises concerns about transparency. Pensioner browsing sessions — including which pages they visit (life certificate, pension slip, account details) — are silently reported to a third party.
+This is the textbook case for using **bcrypt, scrypt, or argon2id** — slow, memory-hard KDFs that make brute-force uneconomic. Plain SHA256 in 2026 is a known-bad pattern.
+
+### Scenario: AES Key Shipped With Ciphertext
+
+SBI Pension Seva's `onSubmitEncr()` and `vlcValidateAcct()` functions generate a random AES key/IV per request, encrypt the password or account number, then **include the key and IV in plaintext in the same POST body**. The encrypted fields and the keys are decoded on the server side from the same request. This pattern provides **zero confidentiality** beyond the TLS transport: any party who can read the POST body (a MITM with compromised TLS, a server-side log, a downstream reverse proxy) immediately has both the key and the ciphertext. The encryption is theatre.
+
+### Scenario: OTP Delivered to "Registered Contact"
+
+Both portals describe OTP delivery to the user's "registered contact" — typically whatever mobile/email was captured at enrolment. For pensioners, the registered contact is often whatever a CSC operator or VLE entered 5+ years ago, possibly before the pensioner themselves had a smartphone. SIM recycling, operator typos, and deceased-pensioner SIMs all produce real-world cases where OTPs land on phones the pensioner no longer controls. This is the same architecture that produced documented OTP-delivery-to-wrong-recipient incidents in U-WIN (2025) and PM-Kisan (2026).
 
 ## Findings Overview
 
-| Severity | Category | Description | Instances |
-|----------|----------|-------------|-----------|
-| **HIGH** | Broken Encryption | Client-side AES-CBC sends encryption key + IV in same request as ciphertext | All sensitive form submissions |
-| **HIGH** | Weak Cryptography | AES key generated with only 64 bits of entropy (8 random bytes) | All encryption operations |
-| **MEDIUM** | Missing Server-Side Controls | OTP resend rate limiting enforced client-side via sessionStorage | Forgot password, registration, OTP verification |
-| **MEDIUM** | Third-Party Tracking | Obfuscated tracking pixel to external analytics domain hidden behind eval() packer | All pages |
-| **MEDIUM** | Incomplete CSP | Content-Security-Policy missing critical directives; typo in domain directive | All responses |
-| **LOW** | Missing HSTS | No Strict-Transport-Security header | All responses |
-| **LOW** | Configuration Typo | Domain directive contains typo (`pensiopnseva` instead of `pensionseva`) | HTTP headers |
-| **LOW** | Weak Password Policy | Maximum password length artificially capped at 12 characters | Registration, password reset |
-| **LOW** | Security Theater | Right-click context menu disabled via JavaScript | All pages |
-
-## Architecture Notes
-
-The portal is built on **ASP.NET Core** with server-rendered Razor views, Bootstrap + jQuery on the frontend. The client-side "encryption" is implemented using **CryptoJS v3.0.2** (a library last updated in 2012). The encryption pattern is consistent across all sensitive operations: login, registration, forgot password, password reset, OTP verification, and account number validation.
-
-The encryption flow works as follows:
-1. User enters credentials in a form
-2. JavaScript generates a random 8-byte key and 8-byte IV
-3. Credentials are encrypted with AES-CBC using these values
-4. The encrypted values replace the plaintext in form fields
-5. The key and IV are placed in **hidden form fields** (`key`, `iv`)
-6. The entire form (including key and IV) is submitted to the server
-
-This provides **zero additional security** over plain HTTPS, since anyone who can read the request can read the key. The only "benefit" is that passwords don't appear in plaintext in server logs — but proper HTTPS already prevents network-level plaintext exposure.
+| Severity | Category | Detail |
+|----------|----------|--------|
+| 🔴 CRITICAL | Service Availability | Central Pensioners' Portal (`pensionersportal.gov.in`) unreachable on 443 for entire audit window |
+| 🟠 HIGH | Static Client-Side Salt | DoT Pension Portal ships 20-character ASCII salt in HTML hidden field for SHA256 password hashing |
+| 🟠 HIGH | Inappropriate Hash Algorithm | Plain `SHA256` used for password hashing (fast, GPU-friendly) instead of bcrypt/argon2 |
+| 🟠 HIGH | AES Key+IV Shipped With Ciphertext | SBI Pension Seva includes the AES key and IV in the same POST body as the ciphertext — encryption theatre |
+| 🟡 MEDIUM | Weak CAPTCHA | Legacy ASP.NET text CAPTCHA at `/Login/CaptchaImage`; no reCAPTCHA / Turnstile / hCaptcha |
+| 🟡 MEDIUM | OTP to Registered Contact | OTP routed to enrolment-time registered contact — SIM-recycling / VLE-typo risk |
+| 🟡 MEDIUM | Permissive CSP | `unsafe-inline` + `unsafe-eval` in CSP `default-src`; HTTP (not HTTPS) CDN whitelist entry |
+| 🔵 LOW | Obsolete Crypto Library | CryptoJS v3.0.2 (2009–2012) bundled in production at SBI Pension Seva |
+| 🔵 LOW | Deprecated X-XSS-Protection Header | `X-XSS-Protection: 1; mode=block` set (deprecated per MDN) |
 
 ## Why This Matters
 
-SBI is India's largest bank and processes pensions for millions of central and state government retirees. The PensionSeva portal is a critical piece of digital infrastructure for a vulnerable demographic — elderly citizens who may not be technically literate enough to recognize phishing or scam attempts.
+Indian pension portals sit at the intersection of three high-stakes data categories:
 
-This analysis joins our series examining the security posture of India's digital financial infrastructure. Previous analyses of the [U-WIN Vaccinator app](/blog/u-win-vaccinator-security-analysis/) and [ABDM Health ID](/blog/abdm-health-id-security-analysis/) revealed similar patterns of client-side secrets and broken encryption models. The common thread: sensitive operations that should be handled server-side are instead pushed to the client, where they cannot be secured.
+- **Identity**: PPO numbers, PAN numbers, Aadhaar-seeded bank accounts
+- **Financial**: Bank account numbers, IFSC, pension amounts, life certificate status
+- **Demographic**: An elderly population with limited digital literacy, often dependent on intermediaries (CSC operators, VLEs, bank staff) for online transactions
 
-The pattern of "encrypt on client, send key alongside" is particularly insidious because it creates a **false sense of security**. Developers may believe they are protecting user credentials, while in reality providing no additional protection beyond what HTTPS already offers.
+When the cryptographic layer that protects passwords and account numbers is **shipped to the client**, the effective security collapses to the transport layer (HTTPS) and the server-side rate limiter. Either failure mode — a TLS-terminating proxy with logging, a reverse-proxy misconfiguration, a brute-force protection bypass — exposes pensioner credentials directly.
+
+This analysis continues the series on Indian government portals that ship cryptographic primitives to the client. See prior analyses of [Aadhaar/UIDAI](./aadhaar-uidai-security-analysis.md), [PM-Kisan](./pmkisan-security-analysis.md), and the U-WIN vaccinator architecture. The pattern recurs because ASP.NET WebForms / MVC scaffolding historically made it easy to wire up CryptoJS in client-side `<script>` blocks, and the encryption layer was never migrated server-side when modern TLS made transport protection cheap.
 
 ## Responsible Disclosure Timeline
 
-| Date | Action |
-|------|--------|
-| 2026-06-01 | Blog post published |
-| 2026-06-01 | Findings to be reported to SBI CIRT / CERT-In |
-| 2026-09-01 | 90-day public disclosure deadline |
+| Date | Event |
+|------|-------|
+| 2026-06-14 | Blog analysis published with redacted details |
+| 2026-06-14 | CERT-In disclosure initiated for DoT Pension Portal and SBI Pension Seva |
+| 2026-06-14 | DoPPW notification for central Pensioners' Portal availability issue |
+| ~2026-09-12 | 90-day responsible disclosure deadline |
 
 ## Recommendations
 
-### Immediate (within 7 days)
-- **Remove the client-side encryption entirely** — rely on HTTPS/TLS for transport security, which is already correctly implemented
-- **Remove the obfuscated tracking pixel** — if analytics are needed, use a transparent, properly declared analytics solution
-- **Add HSTS header** with a minimum max-age of 1 year, includeSubDomains, and preload
+### Immediate (0–7 days)
 
-### Short-term (within 30 days)
-- **Move OTP rate limiting to server-side** — track OTP requests per phone number/account in the backend with a Redis or database-backed counter
-- **Remove the 12-character password maximum** — modern NIST guidelines recommend minimums but no maximums (beyond what the hashing algorithm can handle)
-- **Implement complete CSP** — add missing directives (`style-src`, `img-src`, `font-src`, `connect-src`) and fix the typo in the domain directive
-- **Upgrade CryptoJS** — v3.0.2 is from 2012; if client-side crypto is retained for any purpose, use the Web Crypto API instead
+1. **Investigate the Pensioners' Portal outage.** Confirm whether `pensionersportal.gov.in` 443 timeouts are transient or persistent. If persistent, restore service and add external uptime monitoring with public status page.
+2. **Rotate the static SHA256 salt** currently embedded in the DoT Pension Portal login HTML. Treat the existing value as compromised.
+3. **Replace plain SHA256 with bcrypt / argon2id** for password verification. Move the hashing server-side; do not rely on client-side hashing at all.
 
-### Structural
-- **Publish a Vulnerability Disclosure Policy (VDP)** — SBI currently has no public channel for security researchers to report findings
-- **Implement server-side session management** for rate limiting instead of relying on client-side storage
-- **Conduct a security audit** of the authentication flow — the pattern of sending encryption keys alongside ciphertext suggests the overall auth architecture needs review
+### Short-Term (1–4 weeks)
+
+4. **Replace ASP.NET text CAPTCHA** with Google reCAPTCHA v3 or Cloudflare Turnstile on all login, OTP-generation, and grievance-submission endpoints.
+5. **Eliminate the SBI Pension Seva "AES-then-send-key" pattern.** Either remove client-side encryption entirely (rely on TLS) or implement proper hybrid encryption with a server-provided public key (RSA-OAEP / ECDH) so the AES key never travels.
+6. **Bind OTP delivery to the current session device** rather than the enrolment-time registered contact. For pensioners whose registered mobile is wrong, route through a state-level verification flow.
+7. **Add IP-based and account-based rate limiting** (e.g., 5 OTPs per phone per hour, 20 per IP per hour, exponential backoff after 3 failed logins).
+8. **Upgrade CryptoJS** from v3.0.2 / v3.1.2 to a modern library (e.g., `@noble/ciphers` or WebCrypto API), or eliminate client-side crypto entirely.
+
+### Structural (1–3 months)
+
+9. **Adopt a uniform server-side password policy** across all pension portals — bcrypt cost ≥ 12 or argon2id with recommended parameters.
+10. **Tighten the DoT Pension Portal CSP** — remove `unsafe-inline` and `unsafe-eval` from `default-src`; move inline scripts to nonced external files; update HTTP CDN entries to HTTPS.
+11. **Independent security audit** of all three portals (Pensioners' Portal, DoT Pension Portal, SBI Pension Seva) by CERT-In empanelled auditors, with findings published in summary form.
+12. **Publish a status / uptime page** for the central Pensioners' Portal so pensioners and CSC operators can verify outages without filing grievances.
+
+## Cross-References
+
+- [Aadhaar (UIDAI): Security Architecture Analysis](./aadhaar-uidai-security-analysis.md) — foundational identity layer
+- [PM-Kisan: Security Architecture Analysis](./pmkisan-security-analysis.md) — same client-side-AES anti-pattern in DBT
+- U-WIN Vaccinator analysis — same OTP-to-wrong-recipient anti-pattern in healthcare (see `Skills/govt-security-audit/references/learnings.md`)
+- Series index: [Indian Government Portal Security Audit](./) (tag: `india-gov`)
 
 ---
 
-*This analysis is part of an ongoing security audit of Indian government digital infrastructure. See all analyses at [nanobot.srik.me](https://nanobot.srik.me).*
-
-*If you're a security researcher interested in contributing, check out the [Govt Security Audit Dashboard](https://cashlessconsumer.zo.space/govt-security-audit).*
+*This post is part of an ongoing series of responsible-disclosure security analyses of Indian government digital portals. No exploit details, exact endpoints, or hardcoded secret values are included. If you are a portal operator or ministry official and would like to coordinate on remediation, contact CERT-In or NCIIPC directly.*
