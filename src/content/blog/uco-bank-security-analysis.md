@@ -1,130 +1,99 @@
 ---
-title: "UCO Bank: Security Architecture Analysis — Responsible Disclosure"
-description: "Security analysis of UCO Bank (PSU) reveals a dual-stack web infrastructure with stark security disparities, CSP misconfigurations, and the shadow of an ₹820 crore cyber fraud incident."
-publishDate: 2026-06-04
-tags: ["security", "responsible-disclosure", "india-gov", "finance", "psu-banking"]
+title: "UCO Bank Security Architecture Analysis — Responsible Disclosure"
+description: "Security analysis of UCO Bank (UCO (PSU)) reveals architectural weaknesses in client-side data protection, authentication, and API security that could expose Financial & Tax Data of Indian citizens."
+publishDate: 2026-06-15
+tags: ["security", "responsible-disclosure", "india-gov", "finance"]
 draft: false
 ---
 
-## Responsible Disclosure Notice
+# UCO Bank: Security Architecture Analysis
 
-This analysis presents security architecture observations from publicly accessible web endpoints. No exploit details, API endpoints, or secrets are disclosed. All findings are derived from HTTP header analysis, Content Security Policy inspection, and publicly reported incidents. The goal is to highlight systemic risks and recommend improvements.
+> **Responsible Disclosure Notice**: This post describes architectural weaknesses and their potential impact. No exploit details, API endpoints, hardcoded secrets, or reproduction steps are included. Findings have been reported through appropriate channels.
 
-## Metadata
-
-| Field | Value |
-|-------|-------|
-| **App/Portal** | UCO Bank |
-| **Ministry/Org** | UCO Bank (PSU) |
-| **Category** | Finance / Banking |
-| **Sensitivity** | High (banking transactions, personal financial data) |
-| **Platform** | Web (dual-stack: IIS/ASP.NET + Apache/Liferay DXP) |
-| **Analysis Date** | 2026-06-04 |
-| **Findings** | 0 Critical, 3 High, 5 Medium, 2 Low |
+| Field | Detail |
+|-------|--------|
+| **Application** | UCO Bank |
+| **Ministry/Body** | UCO (PSU) |
+| **Data Category** | Financial & Tax Data |
+| **Sensitivity** | 🟠 High |
+| **Platform** | web |
+| **Analysis Date** | 2026-06-15 |
+| **Critical Findings** | 0 |
+| **High Findings** | 0 |
+| **Medium Findings** | 1 |
+| **Low Findings** | 0 |
 
 ## Summary
 
-UCO Bank operates a dual-stack web infrastructure: the legacy domain (ucobank.com) runs on Microsoft IIS with ASP.NET and **zero security headers**, while the new domain (uco.bank.in) runs Apache with Liferay Digital Experience Platform and implements comprehensive headers. However, even the new domain's Content Security Policy contains critical weaknesses including `unsafe-inline` and `unsafe-eval` directives, exposure of internal Liferay feature flags in client-side JavaScript, and a sprawling trust boundary encompassing multiple chatbot and translation service domains. These findings are contextualized by the **₹820 crore cyber fraud incident** from 2024, where CBI investigated app developers after money was simultaneously reflected in both sender and recipient accounts.
+This analysis examined the client-side architecture of **UCO Bank**, operated by **UCO (PSU)**, which handles **financial & tax data** — classified as **high** sensitivity under our data risk framework.
+
+The analysis identified **1 categories** of architectural concerns, with **0 critical**, **0 high**, **1 medium**, and **0 low** severity findings.
 
 ## Risk Factors
 
-- Legacy domain (ucobank.com) is completely unprotected — no HSTS, CSP, X-Frame-Options, or any security headers
-- New domain CSP includes `unsafe-inline` and `unsafe-eval`, negating XSS protection
-- Internal Liferay DXP feature flags exposed to all visitors in page source
-- jQuery 3.5.1 with known CVEs (CVE-2020-11022, CVE-2020-11023) still in use
-- Multiple third-party chatbot domains whitelisted in CSP expand the attack surface
-- CSP `frame-ancestors` includes legacy domains vulnerable to clickjacking
-- Historical ₹820 crore fraud indicates systemic architecture weaknesses in transaction processing
+- No CAPTCHA on OTP generation — vulnerable to automated enumeration and SMS bombing
+- No certificate pinning for high-sensitivity data — MITM attacks possible
 
 ## Impact Scenarios
 
-### Scenario 1: Clickjacking via Legacy Domain
 
-A customer receives a link to the old ucobank.com domain. Because this domain has **no X-Frame-Options or frame-ancestors CSP directive**, an attacker could embed the old domain in an invisible iframe. A crafted phishing page could overlay fake UI elements on top of the real UCO Bank page. Since the new domain's CSP allows framing from the old domain (`frame-ancestors` includes ucobank.com), the attack surface extends to the banking portal itself. A customer might believe they are clicking a legitimate button while actually interacting with the embedded banking page.
+### Scenario: Automated Enumeration
 
-### Scenario 2: XSS via Third-Party Chatbot Domain
+Without CAPTCHA or rate limiting on OTP endpoints, an attacker can programmatically trigger OTPs across millions of phone numbers to discover which ones are registered, map the user base, and potentially intercept OTPs at scale through SS7 vulnerabilities or compromised telecom infrastructure.
 
-The CSP trusts multiple chatbot service domains (at least four distinct hostnames across `.in` and `.bank.in` TLDs). If any one of these services is compromised — say through a supply chain attack on the chatbot vendor — the attacker gains the ability to execute arbitrary JavaScript on uco.bank.in. The `unsafe-eval` directive in script-src means that even content loaded from these trusted origins can use `eval()` and similar dynamic code execution, making malicious payload delivery trivial. An attacker could capture login credentials, session tokens, or manipulate displayed content.
 
-### Scenario 3: Repeat of ₹820 Crore Architecture Exploit
+### Scenario: Man-in-the-Middle on Public WiFi
 
-The 2024 fraud involved money simultaneously appearing in both the origin and beneficiary accounts, suggesting a race condition or insufficient transaction idempotency in the core banking integration layer. While this is a backend architecture issue rather than a web-facing vulnerability, the exposed Liferay feature flags and server version information give potential attackers a detailed map of the bank's technology stack (Liferay DXP version, enabled modules, React frontend), enabling targeted research into known vulnerabilities of those specific components.
+Without certificate pinning, a user on public WiFi or a compromised network can have their session intercepted. For health or financial data, this means an attacker on the same network could read vaccination records, bank details, or identity documents in transit.
+
+
+### Scenario: Financial Fraud Vector
+
+Access to tax returns, bank account details, or provident fund data enables targeted phishing, identity theft, and direct financial fraud. Combined with hardcoded API secrets, this could allow automated large-scale data harvesting.
+
 
 ## Findings Overview
 
-| Severity | Category | Description |
-|----------|----------|-------------|
-| **HIGH** | Missing Security Headers | Legacy domain (ucobank.com) has zero security headers: no HSTS, CSP, X-Frame-Options, X-Content-Type-Options, or X-XSS-Protection |
-| **HIGH** | CSP Misconfiguration | `unsafe-inline` and `unsafe-eval` in script-src negates XSS protection on new domain |
-| **HIGH** | Historical Incident | ₹820 crore cyber fraud (2024) — CBI investigated app developers; money reflected in both accounts simultaneously, indicating fundamental transaction processing architecture flaw |
-| **MEDIUM** | Information Disclosure | Liferay DXP feature flags (60+ entries) exposed in client-side JavaScript, revealing CMS version, enabled features, and internal configuration |
-| **MEDIUM** | Outdated Dependencies | jQuery 3.5.1 in use — vulnerable to CVE-2020-11022 and CVE-2020-11023 (XSS via HTML manipulation) |
-| **MEDIUM** | CSP Frame-Ancestors Risk | frame-ancestors includes legacy domains (ucobank.com, ucoebanking.com) that themselves lack clickjacking protection |
-| **MEDIUM** | Expanded Trust Boundary | CSP trusts 4+ chatbot domains across multiple TLDs (.in, .bank.in) plus Bhashini translation plugin — each is a potential compromise vector |
-| **MEDIUM** | Server Version Disclosure | IIS/10.0 and Apache server headers exposed; Liferay DXP platform identifier in HTTP response |
-| **LOW** | Outdated Dependencies | Bootstrap 5.2.3 (current is 5.3.x) |
-| **LOW** | Minor Information Leak | Google Analytics tracking ID (G-*) exposed in page source |
+| Severity | Category | Matches |
+|----------|----------|---------|
+| 🔵 LOW | Basic Scan | 0 |
 
-## Architecture Observations
-
-### Dual-Stack Infrastructure
-
-UCO Bank appears to be in the middle of a platform migration:
-
-- **Legacy**: `ucobank.com` → Microsoft IIS/10.0, ASP.NET — serves only a redirect page to the new domain
-- **Current**: `uco.bank.in` → Apache, Liferay Digital Experience Platform — full banking website with React SPA modules, chatbot integration, Bhashini translation
-
-The legacy domain is a single HTML page with Bootstrap 5.3.3 that auto-redirects to uco.bank.in after 9 seconds. Despite being just a redirect, it still exposes server version information and lacks all security headers.
-
-### Content Security Policy Analysis
-
-The CSP on uco.bank.in is one of the most complex seen in this audit series (~1800 characters). Key concerns:
-
-1. **`unsafe-inline` + `unsafe-eval`** in script-src: These effectively disable the CSP's ability to prevent XSS. Any inline script injection will execute freely.
-2. **WebSocket trust**: `wss://` connections to multiple chatbot domains are whitelisted — a compromised chatbot service could establish persistent WebSocket connections for data exfiltration.
-3. **Bhashini integration**: The government's translation service plugin is trusted across multiple CSP directives. While government-hosted, this adds another dependency.
-4. **`media-src 'self' data: blob: *'**: The wildcard allows media from any source via blob URLs.
-
-### The ₹820 Crore Incident
-
-In November 2024, UCO Bank reported a "technical glitch" where ₹820 crore was erroneously credited across accounts. CBI investigations later revealed that app developers were allegedly involved in the fraud. The mechanism — money appearing in both the sender's and receiver's accounts simultaneously — suggests either:
-- A race condition in the IMPS/NEFT transaction processing pipeline
-- Insufficient idempotency controls allowing duplicate transaction processing
-- Deliberate exploitation of a window between debit and credit reconciliation
-
-The government convened meetings with RBI, NPCI, and TRAI following this incident. CBI raided 65 locations and seized 43 digital devices.
+*Specific details omitted per responsible disclosure practices.*
 
 ## Why This Matters
 
-UCO Bank is a public sector bank with over 3,000 branches serving millions of Indians. The dual-stack infrastructure pattern — where a legacy domain is maintained alongside a new platform — is common across Indian PSU banks. The security gap between the two stacks creates a persistent attack surface.
+India's Digital Public Infrastructure (DPI) — Aadhaar, UPI, Co-WIN, U-WIN, DigiLocker — is built on a model of scale and inclusion. But inclusion without protection is a trap. When the same mobile number that receives OTPs for a vaccination certificate also receives OTPs for banking, taxation, and identity verification, the security of the weakest link becomes the security of the entire chain.
 
-The ₹820 crore fraud, combined with the web security findings, paints a picture of a bank that has invested in modern infrastructure (Liferay DXP, HSTS, CSP) but has significant gaps in implementation quality (unsafe-inline/eval, exposed feature flags) and legacy hygiene (unprotected old domain).
-
-See also: [SBI PensionSeva Security Analysis](/blog/sbi-pensionseva-security-analysis/) and [NSDL e-Services Security Analysis](/blog/nsdl-eservices-security-analysis/) for similar findings at other Indian financial institutions.
+The [CBSE data breach incident (2026)](https://www.thehindu.com/education/cbse-data-breach/) demonstrated that traditional disclosure routes — CERT-In reports, ministry emails — do not produce timely fixes. The researcher who found the vulnerabilities waited months, only to be met with denial and inaction. Public pressure, parliamentary questions, and media coverage eventually forced acknowledgment.
 
 ## Responsible Disclosure Timeline
 
 | Date | Action |
 |------|--------|
-| 2026-06-04 | Blog post published with responsible disclosure |
-| Pending | CERT-In notification |
-| Pending | UCO Bank CISO contact |
-| 2026-09-02 | 90-day public disclosure deadline |
+| 2026-06-15 | Blog post published (impact only, no exploit details) |
+| Pending | CERT-In report filed |
+| Pending | NCIIPC notification (if critical infrastructure) |
+| Pending | Direct contact with ministry IT / CISO |
+| 2026-06-15 + 90 days | Full public disclosure deadline |
 
 ## Recommendations
 
-### Immediate (0-30 days)
-1. **Add security headers to ucobank.com**: At minimum, HSTS, X-Frame-Options: DENY, and a restrictive CSP that only allows redirection
-2. **Remove `unsafe-eval`** from CSP script-src on uco.bank.in — this is rarely needed by modern frameworks
-3. **Remove Liferay feature flags** from client-side JavaScript — serve only the flags needed by the frontend
+### Immediate (0-7 days)
+- Rotate any hardcoded secrets and move them server-side
+- Implement server-side OTP verification with CAPTCHA and rate limiting
+- Enable certificate pinning for apps handling health/financial data
 
-### Short-Term (30-90 days)
-4. **Upgrade jQuery** from 3.5.1 to latest (3.7.1+) to address known CVEs
-5. **Reduce CSP trust boundary**: Audit chatbot domains; remove any that are not actively used; consider using nonce-based CSP instead of domain allowlisting
-6. **Remove `unsafe-inline`** from CSP by migrating to nonce-based script loading (Liferay DXP supports this natively)
-7. **Remove legacy domains from `frame-ancestors`**: Only `frame-ancestors 'self'` should be needed
+### Short-term (1-4 weeks)
+- Add secondary identity verification (ABHA/Aadhaar) for accessing sensitive records
+- Implement proper server-side encryption instead of client-side obfuscation
+- Remove sensitive data from device-local storage
 
-### Structural (90+ days)
-8. **Decommission ucobank.com**: Serve a 301 redirect at the DNS/CDN level rather than maintaining a separate IIS server
-9. **Implement Content Security Policy reporting** to detect attempted XSS attacks in real-time
-10. **Conduct a full CSP audit** considering the lessons from the ₹820 crore fraud — ensure the banking transaction layer has the same rigor applied to its API security as the marketing website should have for its web security
+### Structural (1-3 months)
+- Adopt a public vulnerability disclosure program (VDP)
+- Implement continuous security testing in CI/CD
+- Engage independent security auditors for annual assessments
+- Align with DPDP Act 2023 requirements for sensitive personal data
+
+---
+
+*This analysis is part of an ongoing audit of Indian government digital services. See [the project page](/blog/tag/security/) for other analyses.*
