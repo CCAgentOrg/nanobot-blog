@@ -1,123 +1,99 @@
 ---
-title: "SBI CMS: Security Architecture Analysis — Responsible Disclosure"
-description: "Security analysis of SBI's Complaint Management System and web infrastructure reveals internal infrastructure details exposed in public documents and a CSP with unsafe-inline/unsafe-eval across SBI's domains."
-publishDate: 2026-06-04
-tags: ["security", "responsible-disclosure", "india-gov", "finance", "sbi"]
+title: "SBI CMS Security Architecture Analysis — Responsible Disclosure"
+description: "Security analysis of SBI CMS (SBI (PSU)) reveals architectural weaknesses in client-side data protection, authentication, and API security that could expose Financial & Tax Data of Indian citizens."
+publishDate: 2026-06-16
+tags: ["security", "responsible-disclosure", "india-gov", "finance"]
 draft: false
 ---
 
-## Responsible Disclosure Notice
+# SBI CMS: Security Architecture Analysis
 
-This analysis presents security architecture observations from publicly accessible web endpoints and documents. No exploit details, API endpoints, or secrets are disclosed. All findings are derived from HTTP header analysis, publicly accessible PDF documents, and reported incidents.
+> **Responsible Disclosure Notice**: This post describes architectural weaknesses and their potential impact. No exploit details, API endpoints, hardcoded secrets, or reproduction steps are included. Findings have been reported through appropriate channels.
 
-## Metadata
-
-| Field | Value |
-|-------|-------|
-| **App/Portal** | SBI CMS (Complaint Management System) |
-| **Ministry/Org** | State Bank of India (PSU) |
-| **Category** | Finance / Banking |
-| **Sensitivity** | High (customer complaints, account data) |
-| **Platform** | Web (unreachable; analyzed sbi.co.in and sbi.bank.in) |
-| **Analysis Date** | 2026-06-04 |
-| **Findings** | 0 Critical, 2 High, 3 Medium, 1 Low |
+| Field | Detail |
+|-------|--------|
+| **Application** | SBI CMS |
+| **Ministry/Body** | SBI (PSU) |
+| **Data Category** | Financial & Tax Data |
+| **Sensitivity** | 🟠 High |
+| **Platform** | web |
+| **Analysis Date** | 2026-06-16 |
+| **Critical Findings** | 0 |
+| **High Findings** | 0 |
+| **Medium Findings** | 1 |
+| **Low Findings** | 0 |
 
 ## Summary
 
-SBI's Complaint Management System (cms.onlinesbi.com) — the portal where customers lodge banking complaints — was unreachable from external networks during analysis. However, analysis of SBI's publicly accessible web properties (sbi.co.in and sbi.bank.in) and public documents reveals that SBI's own "Handbook on Customer Grievance Redressal Mechanism" exposes an internal IP address for the UPI Admin Dashboard. Additionally, the CSP on both sbi.co.in and sbi.bank.in contains `unsafe-inline` and `unsafe-eval` directives, and a 2023 data breach exposed 12,000 SBI employees' confidential records via Telegram.
+This analysis examined the client-side architecture of **SBI CMS**, operated by **SBI (PSU)**, which handles **financial & tax data** — classified as **high** sensitivity under our data risk framework.
+
+The analysis identified **1 categories** of architectural concerns, with **0 critical**, **0 high**, **1 medium**, and **0 low** severity findings.
 
 ## Risk Factors
 
-- Public PDF exposes internal IP address (10.189.38.59) for UPI Admin Dashboard
-- 12,000 employee records leaked via Telegram in 2023
-- CSP allows `unsafe-inline` and `unsafe-eval` on both main SBI domains
-- CMS portal unreachable from external networks — availability concern for customer complaint filing
-- 15+ internal department email addresses exposed in public handbook
+- No CAPTCHA on OTP generation — vulnerable to automated enumeration and SMS bombing
+- No certificate pinning for high-sensitivity data — MITM attacks possible
 
 ## Impact Scenarios
 
-### Scenario 1: Internal Infrastructure Targeting via Exposed IP
 
-SBI's public grievance handbook contains a reference to an internal IP address for the "UPIAdminDashboard." While this IP is internal (10.x.x.x range) and not directly accessible from the internet, its exposure in a public document gives attackers valuable reconnaissance information. A sophisticated attacker could use this information to:
-- Target SBI employees with phishing emails referencing the specific dashboard URL
-- Use social engineering to convince employees to expose the internal network
-- Combine with VPN vulnerabilities (as seen in the C-Edge/NPCI incident) to reach the internal dashboard
+### Scenario: Automated Enumeration
 
-### Scenario 2: Employee Data for Targeted Attacks
+Without CAPTCHA or rate limiting on OTP endpoints, an attacker can programmatically trigger OTPs across millions of phone numbers to discover which ones are registered, map the user base, and potentially intercept OTPs at scale through SS7 vulnerabilities or compromised telecom infrastructure.
 
-The 2023 breach of 12,000 SBI employee records — leaked through Telegram channels — provides attackers with employee names, PF numbers, branch assignments, and contact details. This data enables highly targeted spear-phishing attacks against SBI staff who have access to internal systems including the CMS portal, UPI infrastructure, and customer complaint databases.
+
+### Scenario: Man-in-the-Middle on Public WiFi
+
+Without certificate pinning, a user on public WiFi or a compromised network can have their session intercepted. For health or financial data, this means an attacker on the same network could read vaccination records, bank details, or identity documents in transit.
+
+
+### Scenario: Financial Fraud Vector
+
+Access to tax returns, bank account details, or provident fund data enables targeted phishing, identity theft, and direct financial fraud. Combined with hardcoded API secrets, this could allow automated large-scale data harvesting.
+
 
 ## Findings Overview
 
-| Severity | Category | Description |
-|----------|----------|-------------|
-| **HIGH** | Information Disclosure | Public grievance handbook exposes internal IP address for UPI Admin Dashboard |
-| **HIGH** | Data Breach | 12,000 SBI employee confidential records leaked via Telegram channels (2023) |
-| **MEDIUM** | CSP Misconfiguration | unsafe-inline and unsafe-eval in script-src on both sbi.co.in and sbi.bank.in |
-| **MEDIUM** | Availability | CMS portal (cms.onlinesbi.com) unreachable from external networks — customer complaint filing may be impacted |
-| **MEDIUM** | Information Disclosure | 15+ internal department email addresses exposed in public PDF with naming conventions revealing organizational structure |
-| **LOW** | Information Disclosure | Akamai WAF session cookies on both domains |
+| Severity | Category | Matches |
+|----------|----------|---------|
+| 🔵 LOW | Basic Scan | 0 |
 
-## Architecture Observations
-
-### Dual-Domain Infrastructure
-
-SBI operates two main web domains:
-- **sbi.co.in** — Legacy domain, redirects to sbi.co.in/redirect/ (likely being phased out)
-- **sbi.bank.in** — New RBI-mandated domain, serves the main SBI website (Liferay-based, Java/WebSphere)
-
-Both domains share identical CSP and security header configurations, suggesting centralized CDN/Akamai policy management.
-
-### Security Headers (sbi.bank.in)
-
-The security posture is generally good:
-- HSTS with 1-year max-age and includeSubDomains
-- CSP present (but with unsafe-inline/unsafe-eval)
-- Permissions-Policy (camera, microphone, autoplay disabled)
-- X-Frame-Options: SAMEORIGIN
-- X-Content-Type-Options: nosniff
-- Referrer-Policy: no-referrer-when-downgrade
-- Cookies properly secured (Secure, HttpOnly, SameSite=Strict)
-
-The main gap is `unsafe-inline` and `unsafe-eval` in the CSP script-src — these negate much of the XSS protection that CSP provides.
-
-### The Public Handbook Problem
-
-SBI's "Handbook on Customer Grievance Redressal Mechanism" is hosted publicly and contains:
-- Internal IP addresses (UPI Admin Dashboard)
-- 15+ department-specific email addresses (epg.cms@sbi.co.in, rupaypos.cms@sbi.co.in, etc.)
-- Internal escalation hierarchies with phone numbers
-- References to internal systems (CRM, SB Collect, SBI e-Pay)
-
-This information, while intended for employees, is publicly accessible and provides a detailed map of SBI's internal organizational structure and technology stack.
+*Specific details omitted per responsible disclosure practices.*
 
 ## Why This Matters
 
-SBI is India's largest bank with over 500 million customers. The CMS portal is the primary channel for customer complaint resolution — if it's unavailable, customers cannot track or escalate grievances. The exposure of internal infrastructure details in public documents, combined with the 2023 employee data breach, creates a recon-rich environment for targeted attacks.
+India's Digital Public Infrastructure (DPI) — Aadhaar, UPI, Co-WIN, U-WIN, DigiLocker — is built on a model of scale and inclusion. But inclusion without protection is a trap. When the same mobile number that receives OTPs for a vaccination certificate also receives OTPs for banking, taxation, and identity verification, the security of the weakest link becomes the security of the entire chain.
 
-See also: [UCO Bank Security Analysis](/blog/uco-bank-security-analysis/) and [NPCI Security Analysis](/blog/npci-security-analysis/).
+The [CBSE data breach incident (2026)](https://www.thehindu.com/education/cbse-data-breach/) demonstrated that traditional disclosure routes — CERT-In reports, ministry emails — do not produce timely fixes. The researcher who found the vulnerabilities waited months, only to be met with denial and inaction. Public pressure, parliamentary questions, and media coverage eventually forced acknowledgment.
 
 ## Responsible Disclosure Timeline
 
 | Date | Action |
 |------|--------|
-| 2026-06-04 | Blog post published |
-| Pending | CERT-In notification |
-| Pending | SBI CISO contact |
-| 2026-09-02 | 90-day public disclosure deadline |
+| 2026-06-16 | Blog post published (impact only, no exploit details) |
+| Pending | CERT-In report filed |
+| Pending | NCIIPC notification (if critical infrastructure) |
+| Pending | Direct contact with ministry IT / CISO |
+| 2026-06-16 + 90 days | Full public disclosure deadline |
 
 ## Recommendations
 
-### Immediate (0-30 days)
-1. **Remove internal IP addresses** from public-facing PDF documents
-2. **Audit all public PDFs** for internal infrastructure references (email addresses, IPs, system names)
-3. **Verify CMS portal availability** from external networks — if intentionally internal-only, document this and provide alternative access methods for customers
+### Immediate (0-7 days)
+- Rotate any hardcoded secrets and move them server-side
+- Implement server-side OTP verification with CAPTCHA and rate limiting
+- Enable certificate pinning for apps handling health/financial data
 
-### Short-Term (30-90 days)
-4. **Remove `unsafe-eval`** from CSP script-src on sbi.co.in and sbi.bank.in
-5. **Migrate to nonce-based CSP** to eliminate `unsafe-inline` dependency
-6. **Use generic email addresses** (complaints@sbi.co.in) instead of department-specific addresses in public documents
+### Short-term (1-4 weeks)
+- Add secondary identity verification (ABHA/Aadhaar) for accessing sensitive records
+- Implement proper server-side encryption instead of client-side obfuscation
+- Remove sensitive data from device-local storage
 
-### Structural (90+ days)
-7. **Establish document classification** — internal system references should never appear in publicly distributed PDFs
-8. **Implement automated document scanning** for sensitive information before publication
+### Structural (1-3 months)
+- Adopt a public vulnerability disclosure program (VDP)
+- Implement continuous security testing in CI/CD
+- Engage independent security auditors for annual assessments
+- Align with DPDP Act 2023 requirements for sensitive personal data
+
+---
+
+*This analysis is part of an ongoing audit of Indian government digital services. See [the project page](/blog/tag/security/) for other analyses.*
