@@ -1,106 +1,135 @@
 ---
-title: "NPPA Security Architecture Analysis — Responsible Disclosure"
-description: "Security analysis of NPPA (National Pharmaceutical Pricing Authority, MoF) reveals an incomplete SSL certificate chain, external jQuery CDN without integrity checks, and missing Content-Security-Policy on India's drug price regulatory portal."
-publishDate: 2026-06-07
-tags: ["security", "responsible-disclosure", "india-gov", "pharmaceutical"]
+title: "NPPA: Security Architecture Analysis — Responsible Disclosure"
+description: "Security analysis of the National Pharmaceutical Pricing Authority portal (nppa.gov.in, Ministry of Finance / Department of Pharmaceuticals) reveals a broken TLS certificate chain, no HTTPS redirect or HSTS, no Content Security Policy, and HTTP-served assets on the HTTPS surface — systemic transport-layer weaknesses on India's drug price regulator."
+publishDate: 2026-06-18
+tags: ["security", "responsible-disclosure", "india-gov", "finance"]
 draft: false
 ---
 
 # NPPA: Security Architecture Analysis
 
-> **Responsible Disclosure Notice**: This post describes architectural weaknesses and their potential impact. No exploit details, API endpoints, hardcoded secrets, or reproduction steps are included. Findings have been reported through appropriate channels.
+> **Responsible Disclosure Notice**: This post describes architectural weaknesses and their potential impact. No exploit details, API endpoints, hardcoded secrets, or reproduction steps are included. The portal is publicly reachable; only passive observation of HTTP response headers and client-side HTML/JavaScript was performed. Findings have been logged for responsible disclosure.
 
 | Field | Detail |
 |-------|--------|
 | **Application** | NPPA (National Pharmaceutical Pricing Authority) |
-| **Ministry/Body** | MoF (Department of Pharmaceuticals) |
-| **Data Category** | Drug Pricing & Manufacturer Data |
+| **Ministry/Body** | Department of Pharmaceuticals (administratively under Ministry of Finance / MoHFW) |
+| **Data Category** | Drug Pricing & Regulatory Orders |
 | **Sensitivity** | 🟡 Medium |
-| **Platform** | Web (Laravel / PHP) |
-| **Analysis Date** | 2026-06-07 |
-| **Critical** | 0 |
-| **High** | 2 |
-| **Medium** | 3 |
-| **Low** | 1 |
+| **Platform** | Web (nppa.gov.in) |
+| **Analysis Date** | 2026-06-18 |
+| **Critical Findings** | 0 |
+| **High Findings** | 3 |
+| **Medium Findings** | 3 |
+| **Low Findings** | 1 |
 
 ## Summary
 
-NPPA — the body that fixes prices of essential medicines in India — runs a Laravel-based portal with generally good security headers (HSTS with preload, X-Frame-Options DENY, SameSite=Strict cookies). However, the site has an **incomplete SSL certificate chain** causing browser security warnings, loads **jQuery from an external CDN without Subresource Integrity** checks, and has **no Content-Security-Policy**. The actual pricing database system (IPDMS) at nppaipdms.gov.in was **unreachable during analysis**.
+This analysis examined the client-side architecture of the **National Pharmaceutical Pricing Authority (NPPA)** — India's drug pricing regulator, which fixes ceiling prices of essential medicines, monitors availability of scheduled drugs, and enforces the Drugs (Prices Control) Order. NPPA decisions directly affect the prices patients pay at pharmacy counters across India.
+
+The portal is built on **Laravel (PHP)** with a jQuery 3.6.1 + Bootstrap frontend. The analysis combined HTTP header inspection with passive review of rendered HTML and JavaScript bundles. It identified **0 critical**, **3 high**, **3 medium**, and **1 low** severity finding — most notably a **broken TLS certificate chain** (missing intermediate certificate causing browser warnings), the **absence of any HTTPS redirect or HSTS header** (allowing plaintext-HTTP usage), and the **complete absence of a Content Security Policy**.
+
+On the positive side, the Laravel backend correctly issues **per-session randomised CSRF tokens** (in contrast to the static token observed on [CDSCO](./cdsco-security-analysis.md)) and ships cookies with `HttpOnly` and `SameSite=Strict` flags. The transport-layer issues, however, largely negate these backend protections.
 
 ## Risk Factors
 
-- **Incomplete SSL chain**: The SSL certificate (Sectigo, valid May-Nov 2026) is missing its intermediate certificate, causing browsers to display security warnings. Users may become accustomed to bypassing these warnings.
-- **External jQuery without SRI**: jQuery 3.6.1 is loaded from `code.jquery.com` without a Subresource Integrity hash. If the CDN is compromised, attackers can inject malicious code into the NPPA portal.
-- **No Content-Security-Policy**: Without CSP, any XSS vulnerability would be exploitable without restriction.
-- **Missing Secure flag on cookies**: Both the XSRF-TOKEN and laravel-session cookies lack the `Secure` flag.
-- **IPDMS unreachable**: The Integrated Pharmaceutical Database Management System (actual pricing database) was unreachable during analysis.
+- The HTTPS endpoint presents a certificate chain that fails verification (`unable to verify the first certificate`) — most browsers will display a "Not Secure" warning, training users to dismiss certificate errors
+- The HTTP endpoint returns `200 OK` directly with no redirect to HTTPS; users typing `nppa.gov.in` into a browser may land on the plaintext version
+- No HTTP Strict Transport Security (HSTS) header is set, so even a one-time HTTP visit can be downgraded indefinitely via an active network attacker
+- No Content Security Policy header is set at all — there is no browser-enforced second line of defence against XSS
+- All `<script>` and `<link>` tags in the homepage use `http://nppa.gov.in/...` URLs, creating **mixed-content** warnings on HTTPS and **MITM-injectable** assets on HTTP
+- The `laravel-session` cookie is set with `HttpOnly; SameSite=Strict` but is **missing the `Secure` flag** — it can be transmitted in plaintext over HTTP
+- The `XSRF-TOKEN` cookie (which Laravel reads back as a header on state-changing requests) is similarly missing the `Secure` flag
+- The deprecated `X-XSS-Protection: 1; mode=block` header is enabled
+- jQuery is on 3.6.1; the current 3.x branch is 3.7.1 — minor security updates have been missed
 
 ## Impact Scenarios
 
-### Scenario 1: CDN Compromise Leading to Data Exfiltration
-If `code.jquery.com` is compromised (as happened with the npm/ua-parser-js incident in 2021), the attacker's JavaScript would execute in the context of nppa.gov.in. Since the site has no CSP to restrict data exfiltration, the malicious script could send form submissions, cookies (except HttpOnly ones), and page content to the attacker — including pharmaceutical company registration data and pricing submission forms.
+### Scenario: Active MITM on an HTTP Visiting Pharmacist
 
-### Scenario 2: SSL Warning Fatigue
-Pharmaceutical companies and government officials accessing NPPA regularly encounter browser SSL warnings. This conditions them to click through security warnings, making them vulnerable to actual MITM attacks on other government portals. A government portal that trains users to ignore SSL warnings undermines the security of the entire ecosystem.
+A pharmacist or drugs-control officer types `nppa.gov.in` into a browser on hotel WiFi, an airport network, or any hostile LAN. The browser tries HTTP first; the server returns `200 OK` with no redirect. An attacker on the same network can now rewrite the response in transit — injecting a malicious `<script>` tag, swapping the published drug price list, or spoofing a "ceiling price revision" notification. Because the real `laravel-session` cookie is also transmitted over HTTP (no `Secure` flag), the attacker can capture a legitimate session identifier and replay it later from a clean network.
 
-### Scenario 3: Pricing Database Unavailability
-If the IPDMS system (nppaipdms.gov.in) is persistently unreachable, pharmaceutical companies cannot submit pricing data, and NPPA cannot enforce ceiling prices. This could delay price notifications for essential medicines, directly affecting patients who depend on affordable drugs.
+### Scenario: TLS Warning Fatigue
+
+When a user does reach the HTTPS endpoint, the browser displays a "Your connection is not private" or "Not Secure" warning because the Sectigo intermediate certificate is missing from the chain. Users who click through the warning to access drug price data are now trained to dismiss the same warning on the next phishing site they visit. For a regulator whose data is consumed daily by pharmacists, doctors, and pharma-industry employees, this is a meaningful security-cultural harm.
+
+### Scenario: XSS Without a CSP Backstop
+
+The portal renders drug names, firm names, batch numbers, and ceiling-price notifications — all of which originate from database content entered by NPPA staff or scraped from industry filings. Any unsanitised string that reaches the page as HTML can execute as JavaScript because there is no Content Security Policy restricting `script-src`. A malicious pharmaceutical firm employee (or a compromised one) who manages to inject a payload into a price-revision notification could harvest session cookies from every regulator, journalist, and competitor firm that subsequently views the notice.
+
+### Scenario: Asset Substitution via HTTP
+
+Because every `<script>` tag in the homepage uses `http://nppa.gov.in/...`, an active attacker on the network can replace any of the ~14 JavaScript bundles with arbitrary code. The browser, seeing HTTP URLs on an HTTP page, will execute the substituted code with no integrity check. There are no Subresource Integrity (SRI) hashes on any of the script tags, so substitution is completely silent.
 
 ## Findings Overview
 
-| # | Severity | Category | Finding |
-|---|----------|----------|---------|
-| 1 | 🟠 High | SSL/TLS | Incomplete certificate chain — intermediate certificate missing |
-| 2 | 🟠 High | Supply Chain | jQuery loaded from external CDN without Subresource Integrity |
-| 3 | 🟡 Medium | Missing Header | No Content-Security-Policy |
-| 4 | 🟡 Medium | Session Management | XSRF-TOKEN and session cookies missing Secure flag |
-| 5 | 🟡 Medium | Availability | IPDMS (nppaipdms.gov.in) unreachable during analysis |
-| 6 | 🟢 Low | Library Version | jQuery 3.6.1 (minor XSS variant in HTML parser) |
+| Severity | Category | Detail |
+|----------|----------|--------|
+| 🟠 HIGH | Broken TLS Chain | HTTPS endpoint fails certificate verification — missing intermediate (Sectigo) certificate |
+| 🟠 HIGH | No HTTPS Enforcement | HTTP returns 200 OK directly; no redirect to HTTPS, no HSTS header |
+| 🟠 HIGH | Missing Content Security Policy | No CSP header of any kind set on responses |
+| 🟡 MEDIUM | Cookie Missing Secure Flag | `laravel-session` and `XSRF-TOKEN` cookies both lack `Secure`, allowing plaintext transmission |
+| 🟡 MEDIUM | Mixed-Content / HTTP Assets | All `<script>` and `<link>` URLs use `http://` even when the page is loaded over HTTPS |
+| 🟡 MEDIUM | Deprecated Header | `X-XSS-Protection: 1; mode=block` enabled (modern guidance: `0`) |
+| 🔵 LOW | Outdated Library | jQuery 3.6.1 (current is 3.7.1); minor security updates missed |
 
-### Positive Findings
+**Positive observations** (not counted as findings):
 
-NPPA has several strong security measures:
-- **HSTS**: `max-age=31536000; includeSubDomains; preload` — excellent
-- **X-Frame-Options**: `DENY` — strongest setting
-- **SameSite=Strict**: Both cookies use Strict mode
-- **HttpOnly**: Session cookie is HttpOnly
-- **Permissions-Policy**: Restricts camera, microphone, geolocation
-- **Referrer-Policy**: `strict-origin-when-cross-origin`
-- **No third-party tracking**: No Facebook Pixel or Google Analytics
-- **Laravel CSRF protection**: Proper XSRF-TOKEN implementation
+- ✅ Real per-session Laravel CSRF token (`<meta name="csrf-token">` with randomised value) — unlike CDSCO's static token
+- ✅ `X-Frame-Options: DENY` (stronger than `SAMEORIGIN`)
+- ✅ `X-Content-Type-Options: nosniff` present
+- ✅ `Referrer-Policy: strict-origin-when-cross-origin` correct
+- ✅ `Permissions-Policy: camera=(), microphone=(), geolocation=()` restrictive
+- ✅ Cookies have `HttpOnly` (where applicable) and `SameSite=Strict`
+- ✅ Laravel backend (modern, patchable framework) rather than a custom-rolled legacy CMS
 
 ## Why This Matters
 
-NPPA controls the prices of over 900 essential medicines through the Drug Price Control Order (DPCO). Pharmaceutical companies submit pricing data through this portal, and NPPA publishes ceiling prices that directly affect what patients pay at pharmacies. The integrity of this system affects the affordability of medicines for 1.4 billion people.
+NPPA publishes the prices of essential medicines — data that affects:
 
-The incomplete SSL chain is particularly concerning for a financial regulatory body. If users are trained to ignore browser warnings on NPPA, they'll ignore them on their bank's website too. [CERT-In's directives](https://www.cert-in.org.in/) specifically require government websites to maintain valid SSL certificates.
+- **Patient out-of-pocket cost** at every pharmacy counter in India
+- **Procurement decisions** by state drug authorities and hospital chains
+- **Pharma company strategy** — pricing teams monitor NPPA notifications in real time
+- **Investor sentiment** — listed pharma stocks move on NPPA ceiling-price revisions
+- **Journalistic investigations** into overpricing and shortage
+
+When a regulator in this position serves its data without a valid TLS chain, without HTTPS enforcement, without HSTS, and without a Content Security Policy, every visitor to the data — particularly pharmacists on shared networks and journalists on hostile networks — is at risk of receiving tampered pricing data. The downstream consequence of altered price data is direct financial harm to patients and to pharma companies, and corrosive loss of trust in the regulatory regime.
+
+This analysis joins a series of security architecture reviews on Indian government digital infrastructure, including [Aadhaar/UIDAI](./aadhaar-uidai-security-analysis.md), [eTenders (CPPP)](./etenders-cppp-security-analysis.md), and [CDSCO](./cdsco-security-analysis.md).
 
 ## Responsible Disclosure Timeline
 
 | Date | Action |
 |------|--------|
-| 2026-06-07 | Blog post published |
-| 2026-06-07 | CERT-In notification (planned) |
-| 2026-06-07 | MoF notification (planned) |
-| 2026-09-05 | 90-day disclosure deadline |
+| **2026-06-18** | Internal analysis completed; findings logged in the security audit database |
+| **(Pending)** | CERT-In disclosure to be filed with redacted technical details within 30 days |
+| **(Pending)** | NPPA IT cell notification via secure channel |
+| **2026-09-18** | 90-day responsible disclosure deadline; full technical detail publication |
 
 ## Recommendations
 
-### Immediate (0-30 days)
-- **Fix SSL certificate chain**: Install the Sectigo intermediate certificate on the server. This is a configuration fix, not a new certificate.
-- **Add SRI to jQuery**: Either host jQuery locally or add `integrity` and `crossorigin` attributes to the script tag.
-- **Add Secure flag to cookies**: Configure Laravel to set `secure` flag on all cookies (since the site uses HTTPS).
+### Immediate (P0 — within 24 hours)
 
-### Short-term (30-90 days)
-- **Add Content-Security-Policy**: Implement CSP with `script-src 'self'` to prevent XSS and enforce local-only scripts.
-- **Host jQuery locally**: Remove dependency on external CDN — government portals should be self-contained.
-- **Monitor IPDMS availability**: Ensure the pricing database system is accessible and monitored.
+1. **Fix the TLS certificate chain** by configuring the Apache server to serve the full intermediate + root chain. The Sectigo intermediate certificate is freely downloadable; this is a configuration issue, not a reissuance.
+2. **Add a `Strict-Transport-Security` header** with at least `max-age=31536000; includeSubDomains; preload` to HTTPS responses.
+3. **Redirect all HTTP traffic to HTTPS** at the Apache vhost level (`Redirect permanent / https://nppa.gov.in/`).
 
-### Structural (90+ days)
-- **Certificate monitoring**: Implement automated certificate expiry and chain validation monitoring.
-- **Subresource Integrity policy**: Mandate SRI for all external resources across MoF portals.
-- **Availability SLA**: Establish an uptime SLA for IPDMS with automated alerting.
+### Short-term (P1 — within 7 days)
+
+1. **Add the `Secure` flag** to both the `laravel-session` and `XSRF-TOKEN` cookies. Once HTTPS is enforced, this is a single Laravel config change (`'secure' => env('SESSION_SECURE_TOKEN', true)` in `config/session.php`).
+2. **Switch all asset URLs to HTTPS** (or, better, use protocol-relative `//nppa.gov.in/assets/...` URLs or root-relative `/assets/...` URLs).
+3. **Deploy a baseline Content Security Policy**: `default-src 'self'; object-src 'none'; frame-ancestors 'none'` is a safe starting point. Tighten `script-src` once inline scripts are addressed via nonces.
+4. **Remove the `X-XSS-Protection` header** entirely (or set to `0`).
+5. **Upgrade jQuery** from 3.6.1 to 3.7.1.
+
+### Structural (P2 — within 90 days)
+
+1. **Add Subresource Integrity (SRI) hashes** to every `<script>` and `<link rel="stylesheet">` tag.
+2. **Migrate all third-party library loading to a self-hosted path** (e.g. download jQuery locally rather than loading from `code.jquery.com`) so that the CDN compromise threat is eliminated.
+3. **Publish a `security.txt`** at `/.well-known/security.txt` with a clear vulnerability reporting path.
+4. **Engage a CERT-In empanelled auditor** for an annual penetration test of the public surface, with the report published in summary form (redacted) so the public can see evidence of due diligence.
+5. **Submit `nppa.gov.in` to the HSTS preload list** once HTTPS enforcement has been live for several weeks without regression.
 
 ---
 
-*Part of the [Indian Government Portal Security Audit](/blog/) series. See the [dashboard](https://cashlessconsumer.zo.space/govt-security-audit) for progress.*
+*This analysis is part of an ongoing series on Indian government digital infrastructure security, published under a responsible-disclosure model with a 90-day embargo on technical detail.*
