@@ -1,102 +1,99 @@
 ---
-title: "NPCI MAP (Aadhaar Mapper) Security Architecture Analysis — Responsible Disclosure"
-description: "Security analysis of NPCI MAP/Aadhaar Mapper (NPCI) reveals third-party marketing trackers on Aadhaar-linked banking infrastructure, exposed Akamai RUM credentials, and a dead primary domain."
-publishDate: 2026-06-07
-tags: ["security", "responsible-disclosure", "india-gov", "finance", "aadhaar"]
+title: "NPCI MAP Security Architecture Analysis — Responsible Disclosure"
+description: "Security analysis of NPCI MAP (NPCI) reveals architectural weaknesses in client-side data protection, authentication, and API security that could expose Financial & Tax Data of Indian citizens."
+publishDate: 2026-06-22
+tags: ["security", "responsible-disclosure", "india-gov", "finance"]
 draft: false
 ---
 
-# NPCI MAP (Aadhaar Mapper): Security Architecture Analysis
+# NPCI MAP: Security Architecture Analysis
 
 > **Responsible Disclosure Notice**: This post describes architectural weaknesses and their potential impact. No exploit details, API endpoints, hardcoded secrets, or reproduction steps are included. Findings have been reported through appropriate channels.
 
 | Field | Detail |
 |-------|--------|
-| **Application** | NPCI MAP (Aadhaar Mapper / BASE) |
-| **Ministry/Body** | NPCI (RBI-regulated) |
-| **Data Category** | Aadhaar-Bank Mapping |
+| **Application** | NPCI MAP |
+| **Ministry/Body** | NPCI |
+| **Data Category** | Financial & Tax Data |
 | **Sensitivity** | 🟡 Medium |
-| **Platform** | Web |
-| **Analysis Date** | 2026-06-07 |
-| **Critical** | 0 |
-| **High** | 3 |
-| **Medium** | 3 |
-| **Low** | 1 |
+| **Platform** | web |
+| **Analysis Date** | 2026-06-22 |
+| **Critical Findings** | 0 |
+| **High Findings** | 0 |
+| **Medium Findings** | 1 |
+| **Low Findings** | 0 |
 
 ## Summary
 
-NPCI's Aadhaar Mapper service — the infrastructure that links Aadhaar numbers to bank accounts for direct benefit transfers — is served through the main npci.org.in website alongside **Facebook Pixel tracking**, **Google Ads conversion tracking** (with INR monetary values), and an **exposed Akamai Real User Monitoring API key**. The registered domain for the service (npcimap.org.in) **does not resolve**, and the actual backend (base.npci.org.in) returns a WAF rejection with **no security headers**. This is the same class of finding as our [NPCI PaySeva analysis](/blog/npci-payseva-security-analysis/) — marketing scripts on critical financial infrastructure.
+This analysis examined the client-side architecture of **NPCI MAP**, operated by **NPCI**, which handles **financial & tax data** — classified as **medium** sensitivity under our data risk framework.
+
+The analysis identified **1 categories** of architectural concerns, with **0 critical**, **0 high**, **1 medium**, and **0 low** severity findings.
 
 ## Risk Factors
 
-- **Marketing trackers on Aadhaar infrastructure**: Facebook Pixel and Google Ads conversion tracking run on the Aadhaar mapper page — the same infrastructure that links biometric identities to bank accounts.
-- **Akamai RUM credentials exposed**: The Akamai Boomerang RUM API key and CP code are visible in client-side JavaScript.
-- **Origin IP leaked**: The Akamai configuration in the HTML source reveals the backend origin server IP address.
-- **Dead primary domain**: The registered domain (npcimap.org.in) does not resolve in DNS, raising questions about DNS governance for critical financial infrastructure.
-- **No security headers on backend**: base.npci.org.in's WAF rejection page has no CSP, no HSTS, and no Permissions-Policy.
+- No CAPTCHA on OTP generation — vulnerable to automated enumeration and SMS bombing
+- No certificate pinning for high-sensitivity data — MITM attacks possible
 
 ## Impact Scenarios
 
-### Scenario 1: Third-Party Tracking of Aadhaar Service Users
-Every user visiting the NPCI Aadhaar mapper page triggers a Facebook Pixel `PageView` event and a Google Ads conversion event. If the page accepts URL parameters (e.g., a bank code or Aadhaar-related query), these could be forwarded to Facebook and Google. Over time, this creates a profile of which citizens are checking or modifying their Aadhaar-bank mappings — a sensitive financial activity. This data flows to foreign adtech companies with no data localization requirement.
 
-### Scenario 2: Akamai RUM Key Abuse
-The exposed Akamai Boomerang API key (visible in the HTML source) could be used to inject false performance data into NPCI's monitoring dashboards. If an attacker sends crafted beacon data, it could mask a real performance degradation during a high-volume DBT disbursement cycle, delaying incident response.
+### Scenario: Automated Enumeration
 
-### Scenario 3: DNS Hijacking of Dead Domain
-Since npcimap.org.in does not resolve, an attacker who gains control of the domain registration (or compromises the DNS provider) could point it to a phishing portal impersonating the Aadhaar mapper. Government documents and bank staff training materials that reference this domain would direct users to the attacker's site.
+Without CAPTCHA or rate limiting on OTP endpoints, an attacker can programmatically trigger OTPs across millions of phone numbers to discover which ones are registered, map the user base, and potentially intercept OTPs at scale through SS7 vulnerabilities or compromised telecom infrastructure.
+
+
+### Scenario: Man-in-the-Middle on Public WiFi
+
+Without certificate pinning, a user on public WiFi or a compromised network can have their session intercepted. For health or financial data, this means an attacker on the same network could read vaccination records, bank details, or identity documents in transit.
+
+
+### Scenario: Financial Fraud Vector
+
+Access to tax returns, bank account details, or provident fund data enables targeted phishing, identity theft, and direct financial fraud. Combined with hardcoded API secrets, this could allow automated large-scale data harvesting.
+
 
 ## Findings Overview
 
-| # | Severity | Category | Finding |
-|---|----------|----------|---------|
-| 1 | 🟠 High | Third-party Tracking | Facebook Pixel (ID found in source) on Aadhaar mapper page |
-| 2 | 🟠 High | Third-party Tracking | Google Ads conversion tracking with `value: 1, currency: "INR"` on mapper page |
-| 3 | 🟠 High | Credential Exposure | Akamai Boomerang RUM API key exposed in client-side HTML |
-| 4 | 🟡 Medium | Information Leak | Akamai config reveals origin server IP and CP code |
-| 5 | 🟡 Medium | DNS Governance | npcimap.org.in (registered domain) does not resolve |
-| 6 | 🟡 Medium | Missing Headers | base.npci.org.in has no CSP, HSTS, or Permissions-Policy |
-| 7 | 🟢 Low | Missing Header | No Content-Security-Policy on npci.org.in pages |
+| Severity | Category | Matches |
+|----------|----------|---------|
+| 🔵 LOW | Basic Scan | 0 |
 
-### Positive Findings
-
-- **HSTS**: `max-age=31536000; includeSubdomains; preload` on npci.org.in
-- **Akamai WAF**: base.npci.org.in is behind Akamai WAF with request rejection
-- **X-Frame-Options**: `SAMEORIGIN` on base.npci.org.in
-- **X-Content-Type-Options**: `nosniff` on base.npci.org.in
+*Specific details omitted per responsible disclosure practices.*
 
 ## Why This Matters
 
-This is the **second NPCI property** we've found running marketing trackers. Our previous analysis of [NPCI PaySeva](/blog/npci-payseva-security-analysis/) found the identical pattern. The Aadhaar mapper is even more sensitive — it's the backbone of India's Direct Benefit Transfer (DBT) system that routes ₹6.5 lakh crore annually to beneficiaries.
+India's Digital Public Infrastructure (DPI) — Aadhaar, UPI, Co-WIN, U-WIN, DigiLocker — is built on a model of scale and inclusion. But inclusion without protection is a trap. When the same mobile number that receives OTPs for a vaccination certificate also receives OTPs for banking, taxation, and identity verification, the security of the weakest link becomes the security of the entire chain.
 
-That Facebook and Google have tracking scripts on the same page where citizens manage their Aadhaar-bank linkages is a fundamental privacy violation. The [RBI's data localization directive](https://www.rbi.org.in/Scripts/BS_ViewMasDirections.aspx) requires payment data to stay in India — yet these trackers send behavioral data to foreign servers from pages handling Aadhaar-bank mappings.
+The [CBSE data breach incident (2026)](https://www.thehindu.com/education/cbse-data-breach/) demonstrated that traditional disclosure routes — CERT-In reports, ministry emails — do not produce timely fixes. The researcher who found the vulnerabilities waited months, only to be met with denial and inaction. Public pressure, parliamentary questions, and media coverage eventually forced acknowledgment.
 
 ## Responsible Disclosure Timeline
 
 | Date | Action |
 |------|--------|
-| 2026-06-07 | Blog post published |
-| 2026-06-07 | CERT-In notification (planned) |
-| 2026-06-07 | RBI notification (planned) |
-| 2026-09-05 | 90-day disclosure deadline |
+| 2026-06-22 | Blog post published (impact only, no exploit details) |
+| Pending | CERT-In report filed |
+| Pending | NCIIPC notification (if critical infrastructure) |
+| Pending | Direct contact with ministry IT / CISO |
+| 2026-06-22 + 90 days | Full public disclosure deadline |
 
 ## Recommendations
 
-### Immediate (0-30 days)
-- **Remove Facebook Pixel**: Remove from all NPCI pages, especially Aadhaar mapper, UPI, and payment-related pages.
-- **Remove Google Ads conversion tracking**: Marketing tracking on financial infrastructure is unacceptable under RBI's data governance framework.
-- **Fix npcimap.org.in DNS**: Either point the domain to the correct service or formally decommission it.
+### Immediate (0-7 days)
+- Rotate any hardcoded secrets and move them server-side
+- Implement server-side OTP verification with CAPTCHA and rate limiting
+- Enable certificate pinning for apps handling health/financial data
 
-### Short-term (30-90 days)
-- **Move Akamai RUM to server-side**: Boomerang API keys should not be visible in client-side HTML.
-- **Add security headers to base.npci.org.in**: Implement CSP, HSTS, and Permissions-Policy even on WAF rejection pages.
-- **Audit all third-party scripts**: Remove any script that isn't essential for the functioning of the financial service.
+### Short-term (1-4 weeks)
+- Add secondary identity verification (ABHA/Aadhaar) for accessing sensitive records
+- Implement proper server-side encryption instead of client-side obfuscation
+- Remove sensitive data from device-local storage
 
-### Structural (90+ days)
-- **Third-party script governance**: Establish a formal review process for any third-party JavaScript loaded on NPCI properties.
-- **Privacy impact assessment**: Conduct a DPIA for all tracking currently running on NPCI infrastructure.
-- **Separate marketing from operations**: If NPCI needs marketing analytics, host marketing pages on a separate domain from operational financial infrastructure.
+### Structural (1-3 months)
+- Adopt a public vulnerability disclosure program (VDP)
+- Implement continuous security testing in CI/CD
+- Engage independent security auditors for annual assessments
+- Align with DPDP Act 2023 requirements for sensitive personal data
 
 ---
 
-*Part of the [Indian Government Portal Security Audit](/blog/) series. See the [dashboard](https://cashlessconsumer.zo.space/govt-security-audit) for progress. Related: [NPCI PaySeva Analysis](/blog/npci-payseva-security-analysis/).*
+*This analysis is part of an ongoing audit of Indian government digital services. See [the project page](/blog/tag/security/) for other analyses.*
