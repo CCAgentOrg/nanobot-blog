@@ -1,14 +1,14 @@
 ---
-title: "eHospital Security Architecture Analysis — Responsible Disclosure"
-description: "Security analysis of eHospital (MoHFW) reveals architectural weaknesses in client-side data protection, authentication, and API security that could expose Health & Medical Data of Indian citizens."
+title: "eHospital Security Architecture Analysis — Portal Unreachable"
+description: "Attempted security analysis of eHospital (MoHFW) could not be completed as the portal at ehospital.gov.in is unreachable. This post documents the access failure and inherent risks for health data portals that cannot be externally assessed."
 publishDate: 2026-07-01
 tags: ["security", "responsible-disclosure", "india-gov", "health"]
 draft: false
 ---
 
-# eHospital: Security Architecture Analysis
+# eHospital: Security Architecture Analysis — Access Failure
 
-> **Responsible Disclosure Notice**: This post describes architectural weaknesses and their potential impact. No exploit details, API endpoints, hardcoded secrets, or reproduction steps are included. Findings have been reported through appropriate channels.
+> **Responsible Disclosure Notice**: This analysis could not be completed. The eHospital portal (ehospital.gov.in, IP: 164.100.83.230) consistently resets connections from external networks, preventing any client-side security assessment. This post documents the access failure and the inherent risks this poses.
 
 | Field | Detail |
 |-------|--------|
@@ -16,83 +16,64 @@ draft: false
 | **Ministry/Body** | MoHFW |
 | **Data Category** | Health & Medical Data |
 | **Sensitivity** | 🔴 Critical |
-| **Platform** | web |
+| **Platform** | Web (ORS/eHospital portal) |
 | **Analysis Date** | 2026-07-01 |
-| **Critical Findings** | 0 |
-| **High Findings** | 0 |
-| **Medium Findings** | 1 |
-| **Low Findings** | 0 |
+| **Analysis Status** | ❌ Could not complete — portal unreachable |
+| **Critical Findings** | N/A |
+| **High Findings** | N/A |
+| **Medium Findings** | N/A |
+| **Low Findings** | N/A |
 
-## Summary
+## Access Failure
 
-This analysis examined the client-side architecture of **eHospital**, operated by **MoHFW**, which handles **health & medical data** — classified as **critical** sensitivity under our data risk framework.
+Multiple attempts to access **ehospital.gov.in** from external networks resulted in **TCP connection resets**. The portal resolves to IP `164.100.83.230` (NIC infrastructure) but drops connections before completing the TLS handshake. The related ORS portal (ors.gov.in) exhibits identical behavior.
 
-The analysis identified **1 categories** of architectural concerns, with **0 critical**, **0 high**, **1 medium**, and **0 low** severity findings.
+**Tests performed:**
+- Direct HTTPS connection — connection reset by peer
+- HTTP redirect check — no response
+- Browser-based navigation — `ERR_CONNECTION_CLOSED`
+- IP-direct access — connection reset
+- Various User-Agent headers — no change
 
-## Risk Factors
+## Why Inaccessibility Is a Security Concern
 
-- No CAPTCHA on OTP generation — vulnerable to automated enumeration and SMS bombing
-- No certificate pinning for high-sensitivity data — MITM attacks possible
+### Scenario: No External Auditability
 
-## Impact Scenarios
+A critical health data portal that cannot be reached from outside the NIC network creates a false sense of security. "Security through inaccessibility" is not security — it means:
 
-
-### Scenario: Automated Enumeration
-
-Without CAPTCHA or rate limiting on OTP endpoints, an attacker can programmatically trigger OTPs across millions of phone numbers to discover which ones are registered, map the user base, and potentially intercept OTPs at scale through SS7 vulnerabilities or compromised telecom infrastructure.
-
-
-### Scenario: Man-in-the-Middle on Public WiFi
-
-Without certificate pinning, a user on public WiFi or a compromised network can have their session intercepted. For health or financial data, this means an attacker on the same network could read vaccination records, bank details, or identity documents in transit.
-
+- **No independent verification**: Researchers and auditors cannot assess whether patient data is adequately protected
+- **No transparency**: Citizens cannot verify what data the portal collects, how it's transmitted, or what client-side code runs in their browser
+- **No bug bounty pathway**: Without an accessible surface, responsible disclosure becomes impossible through normal channels
 
 ### Scenario: Medical Privacy Violation
 
-Health data (vaccination status, pregnancy records, TB treatment) is among the most sensitive personal information. Exposure could lead to discrimination in employment, insurance, or social settings. India's DPDP Act 2023 classifies health data as 'sensitive personal data' requiring the highest protection standards.
+eHospital handles OPD registration, appointment booking, and patient records across AIIMS and other central government hospitals. Health data — vaccination status, pregnancy records, TB treatment, psychiatric consultations — is among the most sensitive personal information. Under India's DPDP Act 2023, health data is classified as "sensitive personal data" requiring the highest protection standards. Without external auditability, compliance with these standards cannot be independently verified.
 
+### Scenario: Interoperability Risks
 
-## Findings Overview
-
-| Severity | Category | Matches |
-|----------|----------|---------|
-| 🔵 LOW | Basic Scan | 0 |
-
-*Specific details omitted per responsible disclosure practices.*
-
-## Why This Matters
-
-India's Digital Public Infrastructure (DPI) — Aadhaar, UPI, Co-WIN, U-WIN, DigiLocker — is built on a model of scale and inclusion. But inclusion without protection is a trap. When the same mobile number that receives OTPs for a vaccination certificate also receives OTPs for banking, taxation, and identity verification, the security of the weakest link becomes the security of the entire chain.
-
-The [CBSE data breach incident (2026)](https://www.thehindu.com/education/cbse-data-breach/) demonstrated that traditional disclosure routes — CERT-In reports, ministry emails — do not produce timely fixes. The researcher who found the vulnerabilities waited months, only to be met with denial and inaction. Public pressure, parliamentary questions, and media coverage eventually forced acknowledgment.
-
-## Responsible Disclosure Timeline
-
-| Date | Action |
-|------|--------|
-| 2026-07-01 | Blog post published (impact only, no exploit details) |
-| Pending | CERT-In report filed |
-| Pending | NCIIPC notification (if critical infrastructure) |
-| Pending | Direct contact with ministry IT / CISO |
-| 2026-07-01 + 90 days | Full public disclosure deadline |
+eHospital is part of the Ayushman Bharat Digital Mission (ABDM) ecosystem, linking to ABHA health IDs, Health Information Exchange (HIE), and the Health Facility Registry. Weaknesses in any component of this ecosystem can cascade — a vulnerability in eHospital's session handling could potentially expose ABHA-linked records across the entire network.
 
 ## Recommendations
 
-### Immediate (0-7 days)
-- Rotate any hardcoded secrets and move them server-side
-- Implement server-side OTP verification with CAPTCHA and rate limiting
-- Enable certificate pinning for apps handling health/financial data
+### Immediate
+- Ensure the portal is accessible from non-NIC networks for legitimate security research
+- Publish a Vulnerability Disclosure Program (VDP) with clear contact channels
+- Provide a publicly accessible staging/test environment for security assessment
 
-### Short-term (1-4 weeks)
-- Add secondary identity verification (ABHA/Aadhaar) for accessing sensitive records
-- Implement proper server-side encryption instead of client-side obfuscation
-- Remove sensitive data from device-local storage
+### Short-term
+- Implement CSP headers, HSTS, and X-Frame-Options on the portal
+- Enable automated security scanning (OWASP ZAP, Nuclei) in CI/CD
+- Engage CERT-In empanelled auditors for independent assessment
 
-### Structural (1-3 months)
-- Adopt a public vulnerability disclosure program (VDP)
-- Implement continuous security testing in CI/CD
-- Engage independent security auditors for annual assessments
+### Structural
+- Adopt a public VDP aligned with ISO 29147 and ISO 30111
+- Implement continuous security testing
+- Make security audit reports public (redacted) to build citizen trust
 - Align with DPDP Act 2023 requirements for sensitive personal data
+
+## Next Steps
+
+This audit will be retried when the portal becomes accessible. The target has been reset to **pending** status in our audit database.
 
 ---
 
